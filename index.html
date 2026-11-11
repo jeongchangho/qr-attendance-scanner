@@ -1,13 +1,661 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101827"><link rel="manifest" href="./manifest.webmanifest"><title>QR 출석 스캐너</title><style>
-*{box-sizing:border-box}body{margin:0;background:#101827;color:#f8fafc;font-family:system-ui,sans-serif}main{max-width:640px;margin:auto;padding:20px}h1{font-size:1.4rem}input,button{width:100%;padding:13px;border:0;border-radius:10px;margin:7px 0;font-size:1rem}button{background:#7dd3fc;font-weight:700}button.stop{background:#475569;color:white}video{width:100%;aspect-ratio:4/3;object-fit:cover;background:#000;border-radius:12px}.panel{background:#1e293b;padding:15px;border-radius:15px;margin:14px 0}.status{white-space:pre-wrap;background:#0f172a;padding:12px;border-radius:10px}.good{color:#86efac}.bad{color:#fca5a5}
-</style></head><body><main><h1>QR 출석 스캐너</h1><section class="panel"><label>Apps Script 웹앱 URL</label><input id="endpoint" placeholder="https://script.google.com/macros/s/.../exec"><video id="video" autoplay muted playsinline></video><button id="start">전면 카메라 시작</button><button id="stop" class="stop" disabled>카메라 종료</button><p id="status" class="status">웹앱 URL을 입력한 뒤 전면 카메라를 시작하세요.</p></section></main>
-<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script><script>
-const video=document.querySelector('#video'),out=document.querySelector('#status'),start=document.querySelector('#start'),stop=document.querySelector('#stop');let stream=null,raf=0,busy=false,last='',lastAt=0;const canvas=document.createElement('canvas'),ctx=canvas.getContext('2d',{willReadFrequently:true});
-function say(s,c=''){out.className='status '+c;out.textContent=s;}
-function stopCamera(){cancelAnimationFrame(raf);if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;video.srcObject=null;start.disabled=false;stop.disabled=true;}
-function send(token){return new Promise((resolve,reject)=>{const base=document.querySelector('#endpoint').value.trim();if(!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(base)){reject(Error('Apps Script 웹앱 URL이 올바르지 않습니다.'));return;}const cb='qrCb'+Date.now();const s=document.createElement('script');const timer=setTimeout(()=>{cleanup();reject(Error('서버 응답 시간 초과. 배포 URL과 액세스 권한을 확인하세요.'));},20000);function cleanup(){clearTimeout(timer);delete window[cb];s.remove();}window[cb]=v=>{cleanup();resolve(v);};s.onerror=()=>{cleanup();reject(Error('서버 연결에 실패했습니다.'));};s.src=base+'?action=scan&token='+encodeURIComponent(token)+'&callback='+cb;document.body.appendChild(s);});}
-async function handle(token){if(busy)return;busy=true;last=token;lastAt=Date.now();say('출석 처리 중…');try{const r=await send(token);say((r.name?r.name+'\\n':'')+r.message+(r.date?'\\n'+r.date:''),r.ok?'good':'bad');}catch(e){say(e.message,'bad');}finally{setTimeout(()=>busy=false,1600);}}
-function scan(){if(!stream)return;if(video.readyState>=2&&video.videoWidth&&window.jsQR){canvas.width=video.videoWidth;canvas.height=video.videoHeight;ctx.drawImage(video,0,0,canvas.width,canvas.height);const f=ctx.getImageData(0,0,canvas.width,canvas.height);const q=jsQR(f.data,f.width,f.height,{inversionAttempts:'attemptBoth'});if(q&&q.data&&!busy&&(q.data!==last||Date.now()-lastAt>4000))handle(q.data);}raf=requestAnimationFrame(scan);}
-start.onclick=async()=>{try{if(!isSecureContext)throw Error('HTTPS 주소로 접속해야 합니다.');if(!window.jsQR)throw Error('QR 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인하세요.');stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{exact:'user'},width:{ideal:1280},height:{ideal:720}}});video.srcObject=stream;await video.play();start.disabled=true;stop.disabled=false;say('전면 카메라 실행 중. QR코드를 비춰주세요.','good');scan();}catch(e){say('카메라 실행 실패: '+e.name+'\\n'+e.message,'bad');stopCamera();}};stop.onclick=stopCamera;
-if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
-</script></body></html>
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101827">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <title>QR 출석 스캐너</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #101827;
+      color: #f8fafc;
+      font-family: system-ui, sans-serif;
+    }
+
+    main {
+      max-width: 640px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      text-align: center;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 13px;
+      border: 0;
+      border-radius: 10px;
+      margin: 7px 0;
+      font-size: 1rem;
+    }
+
+    input {
+      background: #fff;
+      color: #111827;
+    }
+
+    button {
+      background: #7dd3fc;
+      color: #082f49;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button.stop {
+      background: #475569;
+      color: white;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .panel {
+      background: #1e293b;
+      padding: 15px;
+      border-radius: 15px;
+      margin: 14px 0;
+    }
+
+    .camera-wrap {
+      position: relative;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    video {
+      display: block;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+      background: #000;
+      border-radius: 12px;
+    }
+
+    /* 출석 결과 알림 */
+    .notice {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      border-radius: 12px;
+      text-align: center;
+      z-index: 5;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s ease;
+      pointer-events: none;
+    }
+
+    .notice.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .notice.success {
+      background: rgba(22, 163, 74, 0.94);
+      color: #fff;
+    }
+
+    .notice.duplicate {
+      background: rgba(202, 138, 4, 0.95);
+      color: #fff;
+    }
+
+    .notice.error {
+      background: rgba(220, 38, 38, 0.94);
+      color: #fff;
+    }
+
+    .notice-content {
+      width: 100%;
+      overflow-wrap: anywhere;
+    }
+
+    .notice-title {
+      font-size: 1.7rem;
+      font-weight: 800;
+      margin-bottom: 14px;
+    }
+
+    .notice-name {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .notice-message {
+      font-size: 1.15rem;
+      line-height: 1.7;
+      white-space: pre-line;
+      font-weight: 600;
+    }
+
+    .notice-date {
+      font-size: 0.95rem;
+      margin-top: 12px;
+      opacity: 0.9;
+    }
+
+    .status {
+      white-space: pre-wrap;
+      background: #0f172a;
+      padding: 12px;
+      border-radius: 10px;
+      line-height: 1.5;
+    }
+
+    .good {
+      color: #86efac;
+    }
+
+    .bad {
+      color: #fca5a5;
+    }
+  </style>
+</head>
+
+<body>
+<main>
+  <h1>QR 출석 스캐너</h1>
+
+  <section class="panel">
+    <label for="endpoint">Apps Script 웹앱 URL</label>
+
+    <input
+      id="endpoint"
+      type="url"
+      value="https://script.google.com/macros/s/AKfycbz2k8Dw34vL5mKCmOoqiThpm37r8tbRAIriJGhGxd7f4A2-JMRezG-p21inEtBbhltK/exec"
+      placeholder="https://script.google.com/macros/s/.../exec"
+    >
+
+    <div class="camera-wrap">
+      <video id="video" autoplay muted playsinline></video>
+
+      <div id="notice" class="notice">
+        <div class="notice-content">
+          <div id="noticeTitle" class="notice-title"></div>
+          <div id="noticeName" class="notice-name"></div>
+          <div id="noticeMessage" class="notice-message"></div>
+          <div id="noticeDate" class="notice-date"></div>
+        </div>
+      </div>
+    </div>
+
+    <button id="start">전면 카메라 시작</button>
+    <button id="stop" class="stop" disabled>카메라 종료</button>
+
+    <p id="status" class="status">
+      웹앱 URL을 확인한 뒤 전면 카메라를 시작하세요.
+    </p>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+
+<script>
+/* =================================
+   출석 메시지 설정
+================================= */
+
+const MESSAGES = {
+  successTitle: '출석 완료!',
+  successMessage: '복 많이 받으세요!\n출석이 완료되었습니다.',
+
+  duplicateTitle: '이미 출석했습니다',
+  duplicateMessage: '오늘 출석 기록이 이미 있습니다.',
+
+  errorTitle: '출석 확인 실패',
+  unknownTitle: '확인할 수 없는 QR코드'
+};
+
+
+/* =================================
+   기본 요소 및 변수
+================================= */
+
+const video = document.querySelector('#video');
+const out = document.querySelector('#status');
+const start = document.querySelector('#start');
+const stop = document.querySelector('#stop');
+
+const notice = document.querySelector('#notice');
+const noticeTitle = document.querySelector('#noticeTitle');
+const noticeName = document.querySelector('#noticeName');
+const noticeMessage = document.querySelector('#noticeMessage');
+const noticeDate = document.querySelector('#noticeDate');
+
+let stream = null;
+let raf = 0;
+let busy = false;
+let last = '';
+let lastAt = 0;
+let noticeTimer = null;
+
+const canvas = document.createElement('canvas');
+const ctx = canvas.getContext('2d', {
+  willReadFrequently: true
+});
+
+
+/* =================================
+   상태 안내
+================================= */
+
+function say(message, color = '') {
+  out.className = 'status ' + color;
+  out.textContent = message;
+}
+
+
+/* =================================
+   알림 표시
+================================= */
+
+function showNotice(type, title, name, message, date) {
+  clearTimeout(noticeTimer);
+
+  notice.className = 'notice show ' + type;
+
+  noticeTitle.textContent = title || '';
+  noticeName.textContent = name || '';
+  noticeMessage.textContent = message || '';
+  noticeDate.textContent = date || '';
+
+  if (type === 'success') {
+    say('출석이 정상적으로 완료되었습니다.', 'good');
+  } else if (type === 'duplicate') {
+    say('오늘 이미 출석한 회원입니다.', 'good');
+  } else {
+    say(message || '출석 확인에 실패했습니다.', 'bad');
+  }
+
+  beep(type);
+  vibrate(type);
+
+  noticeTimer = setTimeout(() => {
+    notice.classList.remove('show');
+    say('전면 카메라 실행 중…\n다음 QR코드를 비춰주세요.', 'good');
+  }, 2000);
+}
+
+
+/* =================================
+   소리 효과
+================================= */
+
+function beep(type) {
+  try {
+    const AudioContextClass =
+      window.AudioContext || window.webkitAudioContext;
+
+    if (!AudioContextClass) return;
+
+    const audio = new AudioContextClass();
+
+    const oscillator = audio.createOscillator();
+    const gain = audio.createGain();
+
+    oscillator.connect(gain);
+    gain.connect(audio.destination);
+
+    if (type === 'success') {
+      oscillator.frequency.value = 880;
+    } else if (type === 'duplicate') {
+      oscillator.frequency.value = 550;
+    } else {
+      oscillator.frequency.value = 250;
+    }
+
+    oscillator.type = 'sine';
+    gain.gain.value = 0.15;
+
+    oscillator.start();
+    oscillator.stop(audio.currentTime + 0.18);
+
+    oscillator.onended = () => {
+      audio.close();
+    };
+
+  } catch (e) {
+    // 소리 재생을 지원하지 않는 환경에서는 생략
+  }
+}
+
+
+/* =================================
+   진동 효과
+================================= */
+
+function vibrate(type) {
+  if (!navigator.vibrate) return;
+
+  if (type === 'success') {
+    navigator.vibrate([150, 80, 150]);
+  } else if (type === 'duplicate') {
+    navigator.vibrate(250);
+  } else {
+    navigator.vibrate([400, 100, 400]);
+  }
+}
+
+
+/* =================================
+   카메라 종료
+================================= */
+
+function stopCamera() {
+  cancelAnimationFrame(raf);
+
+  if (stream) {
+    stream.getTracks().forEach(track => track.stop());
+  }
+
+  stream = null;
+  video.srcObject = null;
+
+  start.disabled = false;
+  stop.disabled = true;
+
+  notice.classList.remove('show');
+
+  say('카메라가 종료되었습니다.');
+}
+
+
+/* =================================
+   Google Apps Script 연결
+   JSONP 방식으로 출석 전송
+================================= */
+
+function send(token) {
+  return new Promise((resolve, reject) => {
+
+    const base = document.querySelector('#endpoint').value.trim();
+
+    if (!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(base)) {
+      reject(Error('Apps Script 웹앱 URL이 올바르지 않습니다.'));
+      return;
+    }
+
+    const callbackName =
+      'qrCb' + Date.now() + Math.floor(Math.random() * 10000);
+
+    const script = document.createElement('script');
+
+    const timer = setTimeout(() => {
+      cleanup();
+
+      reject(Error(
+        '서버 응답 시간이 초과되었습니다.\n' +
+        '배포 URL과 액세스 권한을 확인하세요.'
+      ));
+    }, 20000);
+
+    function cleanup() {
+      clearTimeout(timer);
+      delete window[callbackName];
+      script.remove();
+    }
+
+    window[callbackName] = result => {
+      cleanup();
+      resolve(result);
+    };
+
+    script.onerror = () => {
+      cleanup();
+      reject(Error('서버 연결에 실패했습니다.'));
+    };
+
+    script.src =
+      base +
+      '?action=scan&token=' +
+      encodeURIComponent(token) +
+      '&callback=' +
+      callbackName;
+
+    document.body.appendChild(script);
+  });
+}
+
+
+/* =================================
+   QR 인식 후 출석 처리
+================================= */
+
+async function handle(token) {
+  if (busy) return;
+
+  busy = true;
+  last = token;
+  lastAt = Date.now();
+
+  say('출석 확인 중…');
+
+  try {
+    const r = await send(token);
+
+    const name = r.name || '';
+    const date = r.date || '';
+    const message = r.message || '출석 결과를 확인했습니다.';
+
+    // 중복 출석을 가장 먼저 확인
+    if (r.code === 'DUPLICATE' || r.duplicate === true) {
+
+      showNotice(
+        'duplicate',
+        MESSAGES.duplicateTitle,
+        name,
+        MESSAGES.duplicateMessage,
+        date
+      );
+
+    // 정상 출석
+    } else if (r.ok) {
+
+      showNotice(
+        'success',
+        MESSAGES.successTitle,
+        name,
+        MESSAGES.successMessage,
+        date
+      );
+
+    // 등록되지 않은 QR
+    } else if (r.code === 'NOT_FOUND') {
+
+      showNotice(
+        'error',
+        MESSAGES.unknownTitle,
+        '',
+        message,
+        ''
+      );
+
+    // 기타 오류 및 비활성 회원
+    } else {
+
+      showNotice(
+        'error',
+        MESSAGES.errorTitle,
+        name,
+        message,
+        date
+      );
+    }
+
+  } catch (e) {
+
+    showNotice(
+      'error',
+      MESSAGES.errorTitle,
+      '',
+      e.message,
+      ''
+    );
+
+  } finally {
+
+    setTimeout(() => {
+      busy = false;
+    }, 2050);
+
+  }
+}
+
+
+/* =================================
+   QR 스캔 반복 실행
+================================= */
+
+function scan() {
+  if (!stream) return;
+
+  if (
+    video.readyState >= 2 &&
+    video.videoWidth &&
+    window.jsQR
+  ) {
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    ctx.drawImage(
+      video,
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+    const frame = ctx.getImageData(
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+    const qr = jsQR(
+      frame.data,
+      frame.width,
+      frame.height,
+      {
+        inversionAttempts: 'attemptBoth'
+      }
+    );
+
+    if (
+      qr &&
+      qr.data &&
+      !busy &&
+      (
+        qr.data !== last ||
+        Date.now() - lastAt > 4000
+      )
+    ) {
+      handle(qr.data);
+    }
+  }
+
+  raf = requestAnimationFrame(scan);
+}
+
+
+/* =================================
+   전면 카메라 시작
+================================= */
+
+start.onclick = async () => {
+
+  try {
+
+    if (!isSecureContext) {
+      throw Error('HTTPS 주소로 접속해야 합니다.');
+    }
+
+    if (!window.jsQR) {
+      throw Error(
+        'QR 라이브러리를 불러오지 못했습니다.\n' +
+        '인터넷 연결을 확인하세요.'
+      );
+    }
+
+    stream = await navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: {
+        facingMode: {
+          exact: 'user'
+        },
+        width: {
+          ideal: 1280
+        },
+        height: {
+          ideal: 720
+        }
+      }
+    });
+
+    video.srcObject = stream;
+
+    await video.play();
+
+    start.disabled = true;
+    stop.disabled = false;
+
+    say(
+      '전면 카메라 실행 중…\nQR코드를 비춰주세요.',
+      'good'
+    );
+
+    scan();
+
+  } catch (e) {
+
+    say(
+      '카메라 실행 실패: ' +
+      e.name +
+      '\n' +
+      e.message,
+      'bad'
+    );
+
+    stopCamera();
+  }
+};
+
+
+/* =================================
+   카메라 종료 버튼
+================================= */
+
+stop.onclick = stopCamera;
+
+
+/* =================================
+   PWA 서비스 워커 등록
+================================= */
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker
+    .register('./sw.js')
+    .catch(() => {});
+}
+
+</script>
+</body>
+</html>
