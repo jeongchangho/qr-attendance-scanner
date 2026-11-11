@@ -1,1 +1,29 @@
-const C='admin-pwa-v1';self.addEventListener('install',e=>e.waitUntil(caches.open(C).then(c=>c.addAll(['./','./index.html','./manifest.webmanifest']))));self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));
+
+const C = 'admin-pwa-v3';
+
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(C).then(cache =>
+      cache.addAll([
+        './',
+        './index.html',
+        './manifest.webmanifest'
+      ])
+    )
+  );
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys()
+      .then(keys =>
+        Promise.all(
+          keys
+            .filter(key => key !== C)
+            .map(key => caches.delete(key))
+        )
+      )
+      .then(() => self.clients.claim())
+  );
+});
