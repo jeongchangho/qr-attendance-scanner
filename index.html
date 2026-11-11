@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#101827">
+  <meta name="description" content="전면 카메라 QR 스캐너 테스트">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon-192.png">
+  <title>전면 카메라 QR 테스트</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, -apple-system, "Noto Sans KR", sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: #101827; color: #f8fafc; }
+    main { width: min(100%, 680px); margin: 0 auto; padding: 24px 16px 40px; }
+    h1 { font-size: 1.45rem; margin: 4px 0 8px; }
+    p { color: #cbd5e1; line-height: 1.55; }
+    .panel { background: #1e293b; border: 1px solid #334155; border-radius: 18px; padding: 16px; margin-top: 16px; }
+    video { width: 100%; aspect-ratio: 4/3; object-fit: cover; background: #020617; border-radius: 12px; }
+    button { border: 0; border-radius: 12px; padding: 14px 18px; font-size: 1rem; font-weight: 700; color: #0f172a; background: #7dd3fc; width: 100%; margin-top: 12px; }
+    button.secondary { color: #f8fafc; background: #475569; }
+    button:disabled { opacity: .45; }
+    .status { padding: 12px; background: #0f172a; border-radius: 10px; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .result { font-size: 1.05rem; font-weight: 700; color: #86efac; }
+    .small { font-size: .88rem; color: #94a3b8; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    canvas { display: none; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>전면 카메라 QR 스캐너 테스트</h1>
+  <p>독립된 HTTPS 웹페이지에서 태블릿의 <b>전면 카메라</b>를 실행하고 QR코드를 인식하는 테스트 앱입니다. 출석부에는 아직 연결하지 않습니다.</p>
+
+  <section class="panel">
+    <video id="video" autoplay muted playsinline></video>
+    <div class="row">
+      <button id="start">전면 카메라 시작</button>
+      <button id="stop" class="secondary" disabled>카메라 종료</button>
+    </div>
+    <p id="status" class="status" role="status">시작 버튼을 누르면 전면 카메라 권한을 요청합니다.</p>
+    <p id="result" class="result">QR 인식 결과: 아직 없음</p>
+    <p class="small">카메라 선택은 전면(facingMode: user)으로 고정합니다. 후면 카메라로 자동 전환하지 않습니다.</p>
+  </section>
+
+  <section class="panel">
+    <b>테스트 방법</b>
+    <ol>
+      <li>태블릿 Chrome에서 이 페이지를 HTTPS 주소로 엽니다.</li>
+      <li>‘전면 카메라 시작’을 누르고 권한을 허용합니다.</li>
+      <li>다른 휴대폰에 표시한 QR코드를 태블릿 전면 카메라에 보여줍니다.</li>
+      <li>화면에 QR 내용이 표시되는지 확인합니다.</li>
+    </ol>
+    <p class="small">파일을 기기에서 직접 여는 file:// 방식은 카메라 접근 및 PWA 설치가 제한될 수 있습니다. HTTPS 호스팅이 필요합니다.</p>
+  </section>
+  <canvas id="canvas"></canvas>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script>
+(() => {
+  const video = document.getElementById('video');
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  const statusEl = document.getElementById('status');
+  const resultEl = document.getElementById('result');
+  const startBtn = document.getElementById('start');
+  const stopBtn = document.getElementById('stop');
+  let stream = null;
+  let raf = null;
+  let lastValue = '';
+  let lastAt = 0;
+
+  function setStatus(message) { statusEl.textContent = message; }
+
+  function stopCamera() {
+    if (raf !== null) cancelAnimationFrame(raf);
+    raf = null;
+    if (stream) stream.getTracks().forEach(track => track.stop());
+    stream = null;
+    video.srcObject = null;
+    startBtn.disabled = false;
+    stopBtn.disabled = true;
+    setStatus('카메라가 종료되었습니다.');
+  }
+
+  function scanFrame() {
+    if (!stream || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+      raf = requestAnimationFrame(scanFrame);
+      return;
+    }
+    if (video.videoWidth && video.videoHeight && window.jsQR) {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const code = jsQR(frame.data, frame.width, frame.height, { inversionAttempts: 'attemptBoth' });
+      if (code && code.data) {
+        const now = Date.now();
+        if (code.data !== lastValue || now - lastAt > 2500) {
+          lastValue = code.data;
+          lastAt = now;
+          resultEl.textContent = 'QR 인식 결과: ' + code.data;
+          setStatus('QR코드를 정상적으로 인식했습니다. 출석 서버에는 전송하지 않은 테스트 결과입니다.');
+          if (navigator.vibrate) navigator.vibrate(80);
+        }
+      }
+    }
+    raf = requestAnimationFrame(scanFrame);
+  }
+
+  async function startCamera() {
+    if (!window.isSecureContext) {
+      setStatus('보안 연결(HTTPS)이 아닙니다. HTTPS 주소로 접속해야 카메라를 사용할 수 있습니다.');
+      return;
+    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setStatus('이 브라우저에서 카메라 API를 사용할 수 없습니다. 최신 Chrome으로 다시 접속해 주세요.');
+      return;
+    }
+    if (!window.jsQR) {
+      setStatus('QR 인식 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인한 뒤 새로고침해 주세요.');
+      return;
+    }
+    startBtn.disabled = true;
+    setStatus('전면 카메라 권한을 요청하는 중입니다…');
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+          facingMode: { exact: 'user' },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      });
+      video.srcObject = stream;
+      await video.play();
+      stopBtn.disabled = false;
+      const track = stream.getVideoTracks()[0];
+      const settings = track && track.getSettings ? track.getSettings() : {};
+      setStatus('전면 카메라가 실행되었습니다.\n카메라 정보: ' + (settings.label || track.label || '브라우저에서 정보 미제공'));
+      resultEl.textContent = 'QR 인식 결과: QR코드를 카메라에 보여주세요.';
+      scanFrame();
+    } catch (err) {
+      startBtn.disabled = false;
+      const messages = {
+        NotAllowedError: '카메라 권한이 거부되었습니다. Chrome 사이트 설정에서 카메라 권한을 허용해 주세요.',
+        PermissionDeniedError: '카메라 권한이 거부되었습니다. Chrome 사이트 설정을 확인해 주세요.',
+        NotFoundError: '전면 카메라를 찾지 못했습니다.',
+        OverconstrainedError: '전면 카메라 조건(facingMode: user)을 만족하는 카메라를 찾지 못했습니다.',
+        NotReadableError: '카메라가 다른 앱에서 사용 중이거나 브라우저가 카메라를 열지 못했습니다.',
+        SecurityError: '보안 정책 때문에 카메라 접근이 차단되었습니다. HTTPS 주소인지 확인해 주세요.'
+      };
+      setStatus((messages[err.name] || '카메라 실행 실패: ' + err.name) + '\n상세: ' + (err.message || '정보 없음'));
+    }
+  }
+
+  startBtn.addEventListener('click', startCamera);
+  stopBtn.addEventListener('click', stopCamera);
+  window.addEventListener('pagehide', stopCamera);
+
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    });
+  }
+})();
+</script>
+</body>
+</html>
