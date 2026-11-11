@@ -1,21 +1,10 @@
 {
   "name": "순천지역WM(관리자)",
-  "short_name": "WM(관리자)",
+  "short_name": "순천지역WM(관리자)",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#123f91",
-  "theme_color": "#123f91",
-  "icons": [
-    {
-      "src": "../qr/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "../qr/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ]
+  "theme_color": "#123f91"
 }
