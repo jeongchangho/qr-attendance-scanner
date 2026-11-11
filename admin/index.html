@@ -7,7 +7,7 @@
 <div class="card"><h3>회원 관리</h3><div id="members">불러오는 중...</div></div>
 <div class="card"><h3>수동 출석 수정</h3><div class="row"><select id="who"></select><input id="date" type="date"><select id="meeting"><option>아침</option><option>저녁</option></select><select id="status"><option>출석</option><option value="">출석 취소</option></select><button onclick="saveAttendance()">저장</button></div></div>
 <div class="card"><h3>회원별 누적 통계</h3><div id="stats"></div></div><button onclick="logout()">로그아웃</button></div></main><script>
-const API="https://script.google.com/macros/s/AKfycbz2k8Dw34vL5mKCmOoqiThpm37r8tbRAIriJGhGxd7f4A2-JMRezG-p21inEtBbhltK/exec";let session=localStorage.getItem("wm_session")||"";
+const API="https://script.google.com/macros/s/AKfycbx6HK7qLTZGvJVyguvH0qgsaJXEJhHFh
 function call(method,params={}){return new Promise((resolve,reject)=>{const cb="wmcb"+Date.now()+Math.floor(Math.random()*9999),s=document.createElement("script");let timer=setTimeout(()=>{clean();reject(Error("서버 응답 시간 초과"))},20000);function clean(){clearTimeout(timer);delete window[cb];s.remove()}window[cb]=r=>{clean();if(r.ok)resolve(r.data);else reject(Error(r.message||"요청 실패"))};s.onerror=()=>{clean();reject(Error("서버 연결 실패"))};s.src=API+"?action=api&method="+encodeURIComponent(method)+"&callback="+cb+"&"+new URLSearchParams(params);document.body.appendChild(s)})}
 async function login(){try{const r=await call("login",{password:document.querySelector("#pw").value});session=r.token;localStorage.setItem("wm_session",session);show()}catch(e){document.querySelector("#err").textContent=e.message}}
 function show(){document.querySelector("#login").classList.add("hidden");document.querySelector("#app").classList.remove("hidden");init()}
