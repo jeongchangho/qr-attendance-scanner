@@ -85,26 +85,30 @@
     }
 
     /* 출석 결과 알림 */
-    .notice {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 18px;
-      border-radius: 12px;
-      text-align: center;
-      z-index: 5;
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.2s ease;
-      pointer-events: none;
-    }
+  .notice {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 14px;
+  border-radius: 16px;
+  text-align: center;
+  z-index: 5;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(35px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  pointer-events: none;
+}
 
-    .notice.show {
-      opacity: 1;
-      visibility: visible;
-    }
+.notice.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
 
     .notice.success {
       background: rgba(22, 163, 74, 0.94);
