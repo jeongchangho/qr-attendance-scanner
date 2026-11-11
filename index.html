@@ -71,7 +71,7 @@
       cursor: not-allowed;
     }
 
-    /* 카메라 영상 영역 */
+    /* 카메라 영역 */
     .camera-wrap {
       position: relative;
       width: 100%;
@@ -90,58 +90,46 @@
       background: #000;
     }
 
-    /* 출석 알림 기본 위치 */
+    /* 출석 결과 알림창 */
     .notice {
       position: absolute;
       left: 16px;
       right: 16px;
       bottom: 16px;
-
       display: flex;
       align-items: center;
       justify-content: center;
-
       min-height: 130px;
       padding: 20px 14px;
-
       border-radius: 16px;
       text-align: center;
-
       z-index: 20;
-
       opacity: 0;
       visibility: hidden;
-
-      transform: translateY(45px);
-
+      transform: translateY(35px);
       transition:
         opacity 0.25s ease,
         transform 0.25s ease,
         visibility 0.25s ease;
-
       pointer-events: none;
     }
 
-    /* 알림이 올라오는 애니메이션 */
     .notice.show {
       opacity: 1;
       visibility: visible;
       transform: translateY(0);
     }
 
-    /* 정상 출석 */
     .notice.success {
       background: rgba(22, 163, 74, 0.96);
       color: #fff;
     }
 
-    /* 중복 출석 */
     .notice.duplicate {
       background: rgba(202, 138, 4, 0.97);
       color: #fff;
     }
 
-    /* 오류 및 미등록 QR */
     .notice.error {
       background: rgba(220, 38, 38, 0.96);
       color: #fff;
@@ -177,12 +165,17 @@
       opacity: 0.9;
     }
 
+    /* 출석 상태 안내창 */
     .status {
+      display: block;
+      width: 100%;
+      min-height: 75px;
       white-space: pre-wrap;
       background: #0f172a;
-      padding: 12px;
+      padding: 15px;
       border-radius: 10px;
-      line-height: 1.5;
+      line-height: 1.6;
+      margin: 10px 0;
     }
 
     .good {
@@ -196,6 +189,7 @@
 </head>
 
 <body>
+
 <main>
 
   <h1>QR 출석 스캐너</h1>
@@ -211,7 +205,7 @@
       placeholder="Apps Script 웹앱 URL"
     >
 
-    <!-- 카메라와 알림창은 반드시 같은 영역 안에 배치 -->
+    <!-- 1. 카메라 영상 -->
     <div class="camera-wrap">
 
       <video
@@ -221,30 +215,18 @@
         playsinline
       ></video>
 
-      <!-- 출석 알림창 -->
+      <!-- 출석 결과 알림: 영상 위에 표시 -->
       <div id="notice" class="notice">
 
         <div class="notice-content">
 
-          <div
-            id="noticeTitle"
-            class="notice-title"
-          ></div>
+          <div id="noticeTitle" class="notice-title"></div>
 
-          <div
-            id="noticeName"
-            class="notice-name"
-          ></div>
+          <div id="noticeName" class="notice-name"></div>
 
-          <div
-            id="noticeMessage"
-            class="notice-message"
-          ></div>
+          <div id="noticeMessage" class="notice-message"></div>
 
-          <div
-            id="noticeDate"
-            class="notice-date"
-          ></div>
+          <div id="noticeDate" class="notice-date"></div>
 
         </div>
 
@@ -252,22 +234,20 @@
 
     </div>
 
-    <!-- 버튼은 카메라 영역 바깥에 배치 -->
+    <!-- 2. 출석 상태 안내: 카메라 바로 아래 -->
+    <p id="status" class="status">
+      웹앱 URL을 확인한 뒤 전면 카메라를 시작하세요.
+    </p>
+
+    <!-- 3. 전면 카메라 시작 버튼 -->
     <button id="start">
       전면 카메라 시작
     </button>
 
-    <button
-      id="stop"
-      class="stop"
-      disabled
-    >
+    <!-- 4. 카메라 종료 버튼 -->
+    <button id="stop" class="stop" disabled>
       카메라 종료
     </button>
-
-    <p id="status" class="status">
-      웹앱 URL을 확인한 뒤 전면 카메라를 시작하세요.
-    </p>
 
   </section>
 
@@ -317,11 +297,9 @@ const noticeDate = document.querySelector('#noticeDate');
 
 let stream = null;
 let raf = 0;
-
 let busy = false;
 let last = '';
 let lastAt = 0;
-
 let noticeTimer = null;
 
 const canvas = document.createElement('canvas');
@@ -332,7 +310,7 @@ const ctx = canvas.getContext('2d', {
 
 
 /* =====================================
-   상태 표시
+   상태 안내
 ===================================== */
 
 function say(message, color = '') {
@@ -342,7 +320,7 @@ function say(message, color = '') {
 
 
 /* =====================================
-   출석 알림 표시
+   출석 결과 알림
 ===================================== */
 
 function showNotice(type, title, name, message, date) {
@@ -369,13 +347,12 @@ function showNotice(type, title, name, message, date) {
   beep(type);
   vibrate(type);
 
-  // 2초 후 알림 자동 숨김
   noticeTimer = setTimeout(() => {
 
     notice.classList.remove('show');
 
     say(
-      '전면 카메라 실행 중…\n다음 QR코드를 비춰주세요.',
+      '전면 카메라 실행 중…\nQR코드를 비춰주세요.',
       'good'
     );
 
@@ -425,7 +402,7 @@ function beep(type) {
     };
 
   } catch (e) {
-    // 소리 재생을 지원하지 않는 경우 생략
+    // 소리 지원이 안 되는 경우 생략
   }
 }
 
@@ -459,11 +436,7 @@ function stopCamera() {
   cancelAnimationFrame(raf);
 
   if (stream) {
-
-    stream.getTracks().forEach(track => {
-      track.stop();
-    });
-
+    stream.getTracks().forEach(track => track.stop());
   }
 
   stream = null;
@@ -480,7 +453,6 @@ function stopCamera() {
 
 /* =====================================
    Apps Script 출석 전송
-   JSONP 방식
 ===================================== */
 
 function send(token) {
@@ -493,11 +465,7 @@ function send(token) {
     if (
       !/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(base)
     ) {
-
-      reject(
-        Error('Apps Script 웹앱 URL이 올바르지 않습니다.')
-      );
-
+      reject(Error('Apps Script 웹앱 URL이 올바르지 않습니다.'));
       return;
     }
 
@@ -511,12 +479,10 @@ function send(token) {
 
       cleanup();
 
-      reject(
-        Error(
-          '서버 응답 시간이 초과되었습니다.\n' +
-          '배포 URL과 액세스 권한을 확인하세요.'
-        )
-      );
+      reject(Error(
+        '서버 응답 시간이 초과되었습니다.\n' +
+        '배포 URL과 액세스 권한을 확인하세요.'
+      ));
 
     }, 20000);
 
@@ -536,7 +502,6 @@ function send(token) {
       cleanup();
 
       resolve(result);
-
     };
 
 
@@ -544,10 +509,7 @@ function send(token) {
 
       cleanup();
 
-      reject(
-        Error('서버 연결에 실패했습니다.')
-      );
-
+      reject(Error('서버 연결에 실패했습니다.'));
     };
 
 
@@ -573,7 +535,6 @@ async function handle(token) {
   if (busy) return;
 
   busy = true;
-
   last = token;
   lastAt = Date.now();
 
@@ -590,7 +551,7 @@ async function handle(token) {
       r.message || '출석 결과를 확인했습니다.';
 
 
-    // 중복 출석을 먼저 확인
+    // 중복 출석
     if (
       r.code === 'DUPLICATE' ||
       r.duplicate === true
@@ -659,7 +620,6 @@ async function handle(token) {
     }, 2050);
 
   }
-
 }
 
 
@@ -721,7 +681,6 @@ function scan() {
   }
 
   raf = requestAnimationFrame(scan);
-
 }
 
 
@@ -734,27 +693,15 @@ start.onclick = async () => {
   try {
 
     if (!isSecureContext) {
-
-      throw Error(
-        'HTTPS 주소로 접속해야 합니다.'
-      );
-
+      throw Error('HTTPS 주소로 접속해야 합니다.');
     }
 
     if (!navigator.mediaDevices?.getUserMedia) {
-
-      throw Error(
-        '이 브라우저에서는 카메라 기능을 사용할 수 없습니다.'
-      );
-
+      throw Error('이 브라우저에서는 카메라를 사용할 수 없습니다.');
     }
 
     if (!window.jsQR) {
-
-      throw Error(
-        'QR 라이브러리를 불러오지 못했습니다.\n인터넷 연결을 확인하세요.'
-      );
-
+      throw Error('QR 라이브러리를 불러오지 못했습니다.');
     }
 
     stream = await navigator.mediaDevices.getUserMedia({
@@ -802,7 +749,6 @@ start.onclick = async () => {
     );
 
     stopCamera();
-
   }
 
 };
