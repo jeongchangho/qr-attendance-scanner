@@ -4,9 +4,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#101827">
+  <meta name="theme-color" content="#1769e0">
   <link rel="manifest" href="./manifest.webmanifest">
-  <title>QR 출석 스캐너</title>
+  <title>QR스캐너</title>
 
   <style>
     * {
@@ -193,7 +193,13 @@
 
 <main>
 
-  <h1>QR 출석 스캐너</h1>
+  <h1>QR스캐너</h1>
+  <section class="panel" id="loginPanel">
+    <label for="sharedPassword">공통 비밀번호</label>
+    <input id="sharedPassword" type="password" autocomplete="current-password" placeholder="공통 비밀번호">
+    <button id="loginButton">로그인</button>
+    <p id="loginMessage" class="status"></p>
+  </section>
 
   <section class="panel">
 
@@ -302,6 +308,7 @@ let busy = false;
 let last = '';
 let lastAt = 0;
 let noticeTimer = null;
+let sessionToken = localStorage.getItem('wm_qr_session') || '';
 
 const canvas = document.createElement('canvas');
 
@@ -313,6 +320,25 @@ const ctx = canvas.getContext('2d', {
 /* =====================================
    상태 안내
 ===================================== */
+
+
+async function loginScanner(){
+  const base=document.querySelector('#endpoint').value.trim();
+  const pw=document.querySelector('#sharedPassword').value;
+  const cb='qrLogin'+Date.now();
+  return new Promise((resolve,reject)=>{
+    const s=document.createElement('script');const timer=setTimeout(()=>{delete window[cb];s.remove();reject(Error('로그인 응답 시간 초과'))},15000);
+    window[cb]=r=>{clearTimeout(timer);delete window[cb];s.remove();if(!r.ok)reject(Error(r.message));else{sessionToken=r.data.token;localStorage.setItem('wm_qr_session',sessionToken);resolve()}};
+    s.onerror=()=>{clearTimeout(timer);delete window[cb];s.remove();reject(Error('서버 연결 실패'))};
+    s.src=base+'?action=api&method=login&password='+encodeURIComponent(pw)+'&callback='+cb;document.body.appendChild(s);
+  });
+}
+document.querySelector('#loginButton').addEventListener('click',async()=>{
+  const m=document.querySelector('#loginMessage');m.textContent='로그인 확인 중...';
+  try{await loginScanner();document.querySelector('#loginPanel').style.display='none';say('로그인 완료. 전면 카메라를 시작하세요.')}
+  catch(e){m.textContent=e.message}
+});
+if(sessionToken)document.querySelector('#loginPanel').style.display='none';
 
 function say(message, color = '') {
   out.className = 'status ' + color;
@@ -518,6 +544,7 @@ function send(token) {
       base +
       '?action=scan&token=' +
       encodeURIComponent(token) +
+      '&session=' + encodeURIComponent(sessionToken) +
       '&callback=' +
       callbackName;
 
