@@ -321,6 +321,39 @@ th{color:#667085;background:#f8f9fc}
     </div>
   </section>
 
+
+  <!-- 모임 일정 관리 -->
+  <section id="schedulesPage" class="page">
+    <h2>모임 일정 관리</h2>
+    <div class="card">
+      <h3 id="scheduleFormTitle">일정 등록</h3>
+      <input type="hidden" id="scheduleId">
+      <div class="form-row">
+        <input type="date" id="scheduleDate">
+        <input id="scheduleTitle" placeholder="일정 제목">
+      </div>
+      <div class="form-row">
+        <input id="scheduleTime" placeholder="시간 (예: 오전 6시)">
+        <input id="schedulePlace" placeholder="장소">
+      </div>
+      <div class="form-row">
+        <input id="scheduleDetail" placeholder="상세 내용">
+      </div>
+      <div class="actions">
+        <button onclick="saveScheduleUI()">일정 저장</button>
+        <button class="secondary" onclick="resetScheduleForm()">새 일정</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="calendar-head">
+        <button class="secondary" onclick="changeScheduleMonth(-1)">이전</button>
+        <strong id="scheduleMonthTitle"></strong>
+        <button class="secondary" onclick="changeScheduleMonth(1)">다음</button>
+      </div>
+      <div id="adminScheduleList"></div>
+    </div>
+  </section>
+
   <!-- 회원별 통계 -->
   <section id="statsPage" class="page">
     <h2>회원별 참여 통계</h2>
@@ -378,6 +411,8 @@ th{color:#667085;background:#f8f9fc}
 
   <button id="navStats"
     onclick="showPage('statsPage')">회원별 참여 통계</button>
+  <button id="navSchedules"
+    onclick="showPage('schedulesPage')">모임 일정 관리</button>
 </div>
 
 <script>
@@ -448,6 +483,9 @@ const methodMap={
   reissueToken:'reissueToken',
   getMemberStats:'stats',
   getMemberPageSummary:'summary',
+  getMemberSchedules:'schedules',
+  saveSchedule:'saveSchedule',
+  deleteSchedule:'deleteSchedule',
   setAttendance:'setAttendance'
 };
 
@@ -516,6 +554,15 @@ runProxy=new Proxy({},{
       }
       else if(prop==='reissueToken'){
         params={row:args[0]};
+      }
+      else if(prop==='getMemberSchedules'){
+        params={year:args[0],month:args[1]};
+      }
+      else if(prop==='saveSchedule'){
+        params={data:JSON.stringify(args[0]||{})};
+      }
+      else if(prop==='deleteSchedule'){
+        params={id:args[0]};
       }
       else if(prop==='setAttendance'){
         params={
@@ -619,7 +666,8 @@ function showPage(id){
   const nav={
     dashboardPage:'navDashboard',
     membersPage:'navMembers',
-    statsPage:'navStats'
+    statsPage:'navStats',
+    schedulesPage:'navSchedules'
   };
 
   document.getElementById(nav[id]).classList.add('active');
@@ -639,6 +687,7 @@ function showPage(id){
     loadStats();
     loadManualMembers();
   }
+  if(id==='schedulesPage'){ initScheduleAdmin(); }
 }
 
 /* =====================================
@@ -986,6 +1035,61 @@ function saveManual(){
     })
     .withFailureHandler(err)
     .setAttendance(token,date,meeting,status);
+}
+
+
+/* =====================================
+   관리자 일정 관리
+===================================== */
+let scheduleAdminYear, scheduleAdminMonth;
+function initScheduleAdmin(){
+  const n=new Date();
+  scheduleAdminYear=n.getFullYear(); scheduleAdminMonth=n.getMonth()+1;
+  if(!document.getElementById('scheduleDate').value)
+    document.getElementById('scheduleDate').value=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');
+  loadAdminSchedules();
+}
+function changeScheduleMonth(delta){
+  scheduleAdminMonth+=delta;
+  if(scheduleAdminMonth>12){scheduleAdminMonth=1;scheduleAdminYear++;}
+  if(scheduleAdminMonth<1){scheduleAdminMonth=12;scheduleAdminYear--;}
+  loadAdminSchedules();
+}
+function loadAdminSchedules(){
+  google.script.run.withSuccessHandler(rows=>{
+    document.getElementById('scheduleMonthTitle').textContent=scheduleAdminYear+'년 '+scheduleAdminMonth+'월';
+    const box=document.getElementById('adminScheduleList');
+    box.innerHTML=rows.length?rows.map(x=>`<div class="notice">
+      <strong>${esc(x.date)} · ${esc(x.title)}</strong>
+      <div>${esc(x.time)} ${esc(x.place)}</div><div>${esc(x.detail)}</div>
+      <div class="actions"><button class="secondary" onclick="editSchedule('${esc(x.id)}')">수정</button>
+      <button class="danger" onclick="removeSchedule('${esc(x.id)}')">삭제</button></div></div>`).join(''):'<p class="muted">등록된 일정이 없습니다.</p>';
+    window.adminScheduleCache=rows;
+  }).withFailureHandler(err).getMemberSchedules(scheduleAdminYear,scheduleAdminMonth);
+}
+function saveScheduleUI(){
+  const data={id:document.getElementById('scheduleId').value,date:document.getElementById('scheduleDate').value,
+    title:document.getElementById('scheduleTitle').value,time:document.getElementById('scheduleTime').value,
+    place:document.getElementById('schedulePlace').value,detail:document.getElementById('scheduleDetail').value};
+  google.script.run.withSuccessHandler(()=>{alert('일정을 저장했습니다.');resetScheduleForm();loadAdminSchedules();})
+    .withFailureHandler(err).saveSchedule(data);
+}
+function editSchedule(id){
+  const x=(window.adminScheduleCache||[]).find(v=>v.id===id); if(!x)return;
+  document.getElementById('scheduleId').value=x.id; document.getElementById('scheduleDate').value=x.date;
+  document.getElementById('scheduleTitle').value=x.title; document.getElementById('scheduleTime').value=x.time;
+  document.getElementById('schedulePlace').value=x.place; document.getElementById('scheduleDetail').value=x.detail;
+  document.getElementById('scheduleFormTitle').textContent='일정 수정';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function resetScheduleForm(){
+  ['scheduleId','scheduleTitle','scheduleTime','schedulePlace','scheduleDetail'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('scheduleFormTitle').textContent='일정 등록';
+}
+function removeSchedule(id){
+  if(!confirm('이 일정을 삭제할까요?'))return;
+  google.script.run.withSuccessHandler(()=>{alert('일정을 삭제했습니다.');loadAdminSchedules();})
+    .withFailureHandler(err).deleteSchedule(id);
 }
 
 /* =====================================
