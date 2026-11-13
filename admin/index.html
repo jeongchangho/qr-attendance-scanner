@@ -1,50 +1,208 @@
-
 <!doctype html>
 <html lang="ko">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-:root{--primary:#315cdb;--bg:#f5f7fb;--text:#182230;--muted:#7b8494;--line:#e8ebf1;--green:#16865b;--sidebar:#fff}
+:root{
+  --primary:#315cdb;
+  --bg:#f5f7fb;
+  --text:#182230;
+  --muted:#7b8494;
+  --line:#e8ebf1;
+  --green:#16865b;
+}
 *{box-sizing:border-box}
-html{min-width:320px}
-body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;max-width:none;margin:0;padding:28px 34px 60px 286px;background:var(--bg);color:var(--text)}
-h1{font-size:29px;margin:0 0 6px}h2{font-size:23px;margin:0 0 8px}h3{font-size:17px;margin:0 0 12px}p{line-height:1.6}
-button,input,select{font:inherit;padding:10px 13px;border:1px solid #d9deea;border-radius:10px}
-button{cursor:pointer;background:var(--primary);color:white;border:0;font-weight:650;transition:filter .15s,transform .15s}button:hover{filter:brightness(.96)}button:active{transform:translateY(1px)}button:disabled{opacity:.6;cursor:wait}
-button.secondary{background:#eef2ff;color:#315cdb}button.gray{background:#667085;color:white}button.danger{background:#d94848;color:white}
-input,select{background:white;max-width:100%;min-height:42px}
-.top{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:24px}
+body{
+  font-family:system-ui,-apple-system,sans-serif;
+  max-width:1100px;
+  margin:0 auto;
+  padding:20px 15px 50px;
+  background:var(--bg);
+  color:var(--text);
+}
+h1{font-size:25px;margin:0 0 6px}
+h2{font-size:21px}
+h3{font-size:17px}
+p{line-height:1.55}
+button,input,select{
+  font:inherit;
+  padding:10px 12px;
+  border:1px solid #d9deea;
+  border-radius:10px;
+}
+button{
+  cursor:pointer;
+  background:var(--primary);
+  color:white;
+  border:0;
+  font-weight:600;
+}
+button.secondary{background:#eef2ff;color:#315cdb}
+button.gray{background:#667085;color:white}
+button.danger{background:#d94848;color:white}
+input,select{background:white;max-width:100%}
+.top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:22px;
+}
 .subtitle,.muted{color:var(--muted);font-size:13px}
-.card{background:white;border:1px solid var(--line);border-radius:17px;padding:22px;margin-bottom:18px;box-shadow:0 3px 12px rgba(20,35,70,.035)}
-.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin:20px 0 22px}
-.stat{background:white;border:1px solid var(--line);border-radius:16px;padding:20px;min-width:0;box-shadow:0 3px 12px rgba(20,35,70,.025)}
-.stat .label{font-size:13px;color:var(--muted)}.stat .value{font-size:31px;font-weight:780;margin-top:9px;overflow-wrap:anywhere;letter-spacing:-.5px}.stat .unit{font-size:13px;color:var(--muted)}
-table{width:100%;border-collapse:collapse;margin-top:12px;background:white}th,td{padding:13px 12px;border-bottom:1px solid var(--line);text-align:left;font-size:14px}th{color:#667085;background:#f8f9fc;font-weight:650}.table-wrap{overflow-x:auto}.actions{display:flex;gap:7px;flex-wrap:wrap}.actions button{padding:8px 11px;font-size:12px}
-.qr{width:190px;max-width:100%}.qr-box{text-align:center;padding:16px}.qr-box img{display:block;margin:12px auto}
-.form-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:10px 0}.form-row input,.form-row select{flex:1;min-width:160px}
-.page{display:none}.page.active{display:block}#adminPage,#memberPage{display:none}
-/* Desktop navigation: persistent left sidebar */
-.drawer-backdrop{display:none!important}.drawer{position:fixed;left:0;right:auto;top:0;height:100vh;width:248px;background:var(--sidebar);z-index:11;padding:25px 17px;box-shadow:5px 0 24px rgba(25,40,75,.055);border-right:1px solid var(--line);transform:none;transition:none;display:block!important}
-.drawer .top{padding:4px 8px 22px;margin-bottom:16px;border-bottom:1px solid var(--line)}.drawer .top strong{font-size:16px}.drawer .top button{display:none}
-.drawer button{width:100%;text-align:left;margin:5px 0;padding:13px 14px;background:transparent;color:#344054;border-radius:10px;font-size:14px}
-.drawer button.active{background:#e8edff;color:#315cdb}.drawer button:hover{background:#f3f5fb}
-#adminPage{max-width:1500px;margin:0 auto}.top>.secondary{display:none}
-#dashboardPage.active{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(330px,.85fr);gap:18px;align-items:start}
-#dashboardPage>h2,#dashboardPage>#adminToday,#dashboardPage>.grid{grid-column:1/-1}
-#dashboardPage>.grid{margin-top:10px;margin-bottom:2px}
-#dashboardPage>.card{margin:0;min-width:0}
-#dashboardPage>.card:nth-of-type(2){grid-column:1;grid-row:4 / span 2}
-#dashboardPage>.card:nth-of-type(3){grid-column:2;grid-row:4}
-#dashboardPage>.card:nth-of-type(4){grid-column:2;grid-row:5}
-.calendar-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}.calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px}.weekday{text-align:center;color:var(--muted);font-size:12px;padding:9px 0}
-.day{min-height:88px;border:1px solid var(--line);background:white;border-radius:11px;padding:9px 4px;text-align:center;color:var(--text);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:7px}.day.empty{background:transparent;border:0}.day.has{background:#eaf7f1;border-color:#b8e2ce}.day.selected{outline:2px solid var(--primary)}.day .num{font-size:15px;font-weight:700}.day .count{font-size:12px;color:var(--green)}
-.attendee-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.person{background:#eef2ff;color:#315cdb;border-radius:30px;padding:8px 13px;font-size:13px}.notice{padding:12px;background:#f0f5ff;border-radius:10px;margin:12px 0;font-size:13px}
-#loginBox{max-width:440px;margin:12vh auto!important;padding:30px!important}#loginBox h2{margin-bottom:18px}
-@media(max-width:1100px){body{padding-right:22px;padding-left:270px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}#dashboardPage.active{grid-template-columns:minmax(0,1fr)}#dashboardPage>h2,#dashboardPage>#adminToday,#dashboardPage>.grid,#dashboardPage>.card{grid-column:1!important;grid-row:auto!important}}
-@media(max-width:700px){body{padding:16px 12px 40px}.drawer{width:0;display:none!important}.top>.secondary{display:inline-flex}body:has(#drawer.open){padding-left:12px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.stat{padding:14px}.stat .value{font-size:23px}.day{min-height:58px;padding:6px 2px}th,td{padding:9px 7px;font-size:12px}.card{padding:16px}#dashboardPage.active{display:block}#dashboardPage>.card{margin-bottom:15px}}
-
-@media(max-width:700px){.drawer{display:block!important;width:min(290px,85vw);left:auto;right:0;transform:translateX(110%);transition:transform .2s}.drawer.open{transform:translateX(0)}.drawer .top button{display:block}.drawer-backdrop{display:none!important}body:has(.drawer.open) .drawer-backdrop{display:block!important;position:fixed;inset:0;background:#0006;z-index:10}}
+.card{
+  background:white;
+  border:1px solid var(--line);
+  border-radius:17px;
+  padding:18px;
+  margin-bottom:15px;
+  box-shadow:0 3px 12px rgba(20,35,70,.035);
+}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px;
+  margin:18px 0;
+}
+.stat{
+  background:white;
+  border:1px solid var(--line);
+  border-radius:15px;
+  padding:17px;
+  min-width:0;
+}
+.stat .label{font-size:13px;color:var(--muted)}
+.stat .value{
+  font-size:25px;
+  font-weight:750;
+  margin-top:8px;
+  overflow-wrap:anywhere;
+}
+.stat .unit{font-size:13px;color:var(--muted)}
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:12px;
+  background:white;
+}
+th,td{
+  padding:11px 9px;
+  border-bottom:1px solid var(--line);
+  text-align:left;
+  font-size:14px;
+}
+th{color:#667085;background:#f8f9fc}
+.table-wrap{overflow-x:auto}
+.actions{display:flex;gap:6px;flex-wrap:wrap}
+.actions button{padding:8px 10px;font-size:12px}
+.qr{width:190px;max-width:100%}
+.qr-box{text-align:center;padding:16px}
+.qr-box img{display:block;margin:12px auto}
+.form-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  align-items:center;
+  margin:8px 0;
+}
+.form-row input,.form-row select{flex:1;min-width:130px}
+.page{display:none}
+.page.active{display:block}
+#adminPage,#memberPage{display:none}
+.drawer-backdrop{
+  position:fixed;
+  inset:0;
+  background:#0006;
+  z-index:10;
+  display:none;
+}
+.drawer{
+  position:fixed;
+  right:0;
+  top:0;
+  height:100%;
+  width:min(290px,85vw);
+  background:white;
+  z-index:11;
+  padding:24px 18px;
+  box-shadow:-8px 0 30px #0002;
+  transform:translateX(110%);
+  transition:transform .2s;
+}
+.drawer.open{transform:translateX(0)}
+.drawer button{
+  width:100%;
+  text-align:left;
+  margin:5px 0;
+  background:#f2f4f8;
+  color:#263247;
+}
+.drawer button.active{background:#e8edff;color:#315cdb}
+.calendar-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-bottom:14px;
+}
+.calendar{
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  gap:6px;
+}
+.weekday{
+  text-align:center;
+  color:var(--muted);
+  font-size:12px;
+  padding:8px 0;
+}
+.day{
+  min-height:70px;
+  border:1px solid var(--line);
+  background:white;
+  border-radius:11px;
+  padding:7px 3px;
+  text-align:center;
+  color:var(--text);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  gap:5px;
+}
+.day.empty{background:transparent;border:0}
+.day.has{background:#eaf7f1;border-color:#b8e2ce}
+.day.selected{outline:2px solid var(--primary)}
+.day .num{font-size:14px;font-weight:700}
+.day .count{font-size:11px;color:var(--green)}
+.attendee-list{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:12px;
+}
+.person{
+  background:#eef2ff;
+  color:#315cdb;
+  border-radius:30px;
+  padding:8px 13px;
+  font-size:13px;
+}
+.notice{
+  padding:12px;
+  background:#f0f5ff;
+  border-radius:10px;
+  margin:12px 0;
+  font-size:13px;
+}
+@media(max-width:650px){
+  body{padding:15px 11px 40px}
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  .stat{padding:14px}
+  .stat .value{font-size:22px}
+  .day{min-height:58px;padding:6px 2px}
+  th,td{padding:9px 7px;font-size:12px}
+}
 </style>
 </head>
 
@@ -83,17 +241,17 @@ table{width:100%;border-collapse:collapse;margin-top:12px;background:white}th,td
         <div class="unit">명</div>
       </div>
       <div class="stat">
-        <div class="label">오늘 아침 참석자</div>
+        <div class="label">오늘 아침기도모임 참여자</div>
         <div class="value" id="adminTodayCount">-</div>
         <div class="unit">명</div>
       </div>
       <div class="stat">
-        <div class="label">오늘 아침 참여율</div>
+        <div class="label">오늘 아침기도모임 참여율</div>
         <div class="value" id="adminTodayRate">-</div>
         <div class="unit">%</div>
       </div>
       <div class="stat">
-        <div class="label">이번 달 아침 평균 참여율</div>
+        <div class="label">이번달 아침기도모임 평균 참여율</div>
         <div class="value" id="adminMonthRate">-</div>
         <div class="unit">%</div>
       </div>
@@ -220,64 +378,194 @@ function apiCall(method, params={}) {
   return new Promise((resolve,reject)=>{
     const cb='wmrestore'+Date.now()+Math.floor(Math.random()*10000);
     const script=document.createElement('script');
-    const timer=setTimeout(()=>{cleanup();reject(new Error('서버 응답 시간 초과'));},20000);
-    function cleanup(){clearTimeout(timer);delete window[cb];script.remove();}
-    window[cb]=r=>{cleanup();if(r && r.ok)resolve(r.data);else reject(new Error((r&&r.message)||'서버 요청 실패'));};
-    script.onerror=()=>{cleanup();reject(new Error('서버 연결 실패'));};
+
+    const timer=setTimeout(()=>{
+      cleanup();
+      reject(new Error('서버 응답 시간 초과'));
+    },20000);
+
+    function cleanup(){
+      clearTimeout(timer);
+      delete window[cb];
+      script.remove();
+    }
+
+    window[cb]=r=>{
+      cleanup();
+      if(r && r.ok) resolve(r.data);
+      else reject(new Error((r&&r.message)||'서버 요청 실패'));
+    };
+
+    script.onerror=()=>{
+      cleanup();
+      reject(new Error('서버 연결 실패'));
+    };
+
     const q=new URLSearchParams({...params,session:adminSession});
-    script.src=API+'?action=api&method='+encodeURIComponent(method)+'&callback='+cb+'&'+q.toString();
+
+    script.src=API+
+      '?action=api&method='+
+      encodeURIComponent(method)+
+      '&callback='+cb+'&'+q.toString();
+
     document.body.appendChild(script);
   });
 }
 
-// 기존 google.script.run 호출부를 유지하면서 새 JSONP API로 연결
-const runBridge={
-  success:null, failure:null,
-  withSuccessHandler(fn){this.success=fn;return this;},
-  withFailureHandler(fn){this.failure=fn;return this;}
+/* =====================================
+   google.script.run 호환 API 연결
+===================================== */
+
+const methodMap={
+  getDashboardData:'dashboard',
+  getMemberCalendarData:'calendar',
+  getMorningAttendees:'attendees',
+  addMember:'addMember',
+  listMembers:'members',
+  updateMember:'updateMember',
+  reissueToken:'reissueToken',
+  getMemberStats:'stats',
+  setAttendance:'setAttendance'
 };
-const methodMap={getDashboardData:'dashboard',getMemberCalendarData:'calendar',getMorningAttendees:'attendees',addMember:'addMember',listMembers:'members',updateMember:'updateMember',reissueToken:'reissueToken',getMemberStats:'stats',setAttendance:'setAttendance'};
-const google = {
-  script: {
-    run: new Proxy(runBridge, {
-      get(target, prop) {
-        if (prop in target) return target[prop].bind(target);
-        return (...args) => {
-          const method = methodMap[prop];
-          if (!method) throw new Error('지원하지 않는 API: ' + String(prop));
-          let params = {};
-          if (prop === 'getMemberCalendarData') params = {year:args[0], month:args[1]};
-          else if (prop === 'getMorningAttendees') params = {date:args[0]};
-          else if (prop === 'addMember') params = {name:args[0]};
-          else if (prop === 'updateMember') params = {row:args[0], name:args[1], status:args[2]};
-          else if (prop === 'reissueToken') params = {row:args[0]};
-          else if (prop === 'setAttendance') params = {token:args[0], date:args[1], meeting:args[2], status:args[3]};
-          apiCall(method, params)
-            .then(value => { if (target.success) target.success(value); })
-            .catch(error => { if (target.failure) target.failure(error); });
-          return runBridge;
+
+const runBridge={
+  success:null,
+  failure:null
+};
+
+const runProxy=new Proxy(runBridge,{
+  get(target,prop,receiver){
+
+    if(prop==='withSuccessHandler'){
+      return fn=>{
+        target.success=fn;
+        return receiver;
+      };
+    }
+
+    if(prop==='withFailureHandler'){
+      return fn=>{
+        target.failure=fn;
+        return receiver;
+      };
+    }
+
+    if(prop in target){
+      return target[prop];
+    }
+
+    return (...args)=>{
+      const method=methodMap[prop];
+
+      if(!method){
+        throw new Error('지원하지 않는 API: '+String(prop));
+      }
+
+      let params={};
+
+      if(prop==='getMemberCalendarData'){
+        params={year:args[0],month:args[1]};
+      }
+      else if(prop==='getMorningAttendees'){
+        params={date:args[0]};
+      }
+      else if(prop==='addMember'){
+        params={name:args[0]};
+      }
+      else if(prop==='updateMember'){
+        params={
+          row:args[0],
+          name:args[1],
+          status:args[2]
         };
       }
-    })
+      else if(prop==='reissueToken'){
+        params={row:args[0]};
+      }
+      else if(prop==='setAttendance'){
+        params={
+          token:args[0],
+          date:args[1],
+          meeting:args[2],
+          status:args[3]
+        };
+      }
+
+      apiCall(method,params)
+        .then(value=>{
+          if(typeof target.success==='function'){
+            target.success(value);
+          }
+        })
+        .catch(error=>{
+          if(typeof target.failure==='function'){
+            target.failure(error);
+          }else{
+            console.error(error);
+          }
+        });
+
+      return receiver;
+    };
+  }
+});
+
+const google={
+  script:{
+    run:runProxy
   }
 };
 
+/* =====================================
+   관리자 로그인
+===================================== */
+
 async function adminLogin(){
- const pw=document.getElementById('adminPassword').value;
- const errBox=document.getElementById('loginError');
- const btn=document.getElementById('loginButton');
- btn.disabled=true;errBox.textContent='로그인 확인 중...';
- try{const result=await apiCall('login',{password:pw});adminSession=result.token;localStorage.setItem('wm_session',adminSession);startAdmin();}
- catch(e){errBox.textContent=e.message;}finally{btn.disabled=false;}
+  const pw=document.getElementById('adminPassword').value;
+  const errBox=document.getElementById('loginError');
+  const btn=document.getElementById('loginButton');
+
+  btn.disabled=true;
+  errBox.textContent='로그인 확인 중...';
+
+  try{
+    const result=await apiCall('login',{password:pw});
+
+    adminSession=result.token;
+    localStorage.setItem('wm_session',adminSession);
+
+    startAdmin();
+  }
+  catch(e){
+    errBox.textContent=e.message;
+  }
+  finally{
+    btn.disabled=false;
+  }
 }
-function startAdmin(){document.getElementById('loginBox').style.display='none';document.getElementById('adminPage').style.display='block';
- const now=new Date();document.getElementById('manualDate').value=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
- loadDashboard();initAdminCalendar();}
 
+function startAdmin(){
+  document.getElementById('loginBox').style.display='none';
+  document.getElementById('adminPage').style.display='block';
 
-const esc = s => String(s ?? '').replace(
+  const now=new Date();
+
+  document.getElementById('manualDate').value=
+    now.getFullYear()+'-'+
+    String(now.getMonth()+1).padStart(2,'0')+'-'+
+    String(now.getDate()).padStart(2,'0');
+
+  loadDashboard();
+  initAdminCalendar();
+}
+
+/* =====================================
+   공통 함수
+===================================== */
+
+const esc=s=>String(s??'').replace(
   /[&<>"']/g,
-  c => ({
+  c=>({
     '&':'&amp;',
     '<':'&lt;',
     '>':'&gt;',
@@ -286,36 +574,36 @@ const esc = s => String(s ?? '').replace(
   }[c])
 );
 
-function err(e) {
-  alert(e && e.message ? e.message : e);
+function err(e){
+  alert(e&&e.message?e.message:e);
 }
 
 /* =====================================
    관리자 메뉴
 ===================================== */
 
-function openDrawer() {
+function openDrawer(){
   document.getElementById('drawer').classList.add('open');
-  document.getElementById('drawerBackdrop').style.display = 'block';
+  document.getElementById('drawerBackdrop').style.display='block';
 }
 
-function closeDrawer() {
+function closeDrawer(){
   document.getElementById('drawer').classList.remove('open');
-  document.getElementById('drawerBackdrop').style.display = 'none';
+  document.getElementById('drawerBackdrop').style.display='none';
 }
 
-function showPage(id) {
-  document.querySelectorAll('#adminPage .page').forEach(p => {
+function showPage(id){
+  document.querySelectorAll('#adminPage .page').forEach(p=>{
     p.classList.remove('active');
   });
 
   document.getElementById(id).classList.add('active');
 
-  document.querySelectorAll('.drawer button').forEach(b => {
+  document.querySelectorAll('.drawer button').forEach(b=>{
     b.classList.remove('active');
   });
 
-  const nav = {
+  const nav={
     dashboardPage:'navDashboard',
     membersPage:'navMembers',
     statsPage:'navStats'
@@ -325,16 +613,16 @@ function showPage(id) {
 
   closeDrawer();
 
-  if (id === 'dashboardPage') {
+  if(id==='dashboardPage'){
     loadDashboard();
     loadAdminCalendar();
   }
 
-  if (id === 'membersPage') {
+  if(id==='membersPage'){
     loadMembers();
   }
 
-  if (id === 'statsPage') {
+  if(id==='statsPage'){
     loadStats();
     loadManualMembers();
   }
@@ -344,22 +632,21 @@ function showPage(id) {
    관리자 대시보드
 ===================================== */
 
-function loadDashboard() {
+function loadDashboard(){
   google.script.run
-    .withSuccessHandler(d => {
-      document.getElementById('adminToday').textContent =
-        d.today;
+    .withSuccessHandler(d=>{
+      document.getElementById('adminToday').textContent=d.today;
 
-      document.getElementById('adminTotal').textContent =
+      document.getElementById('adminTotal').textContent=
         d.totalMembers;
 
-      document.getElementById('adminTodayCount').textContent =
+      document.getElementById('adminTodayCount').textContent=
         d.todayMorningCount;
 
-      document.getElementById('adminTodayRate').textContent =
+      document.getElementById('adminTodayRate').textContent=
         Number(d.todayMorningRate).toFixed(1);
 
-      document.getElementById('adminMonthRate').textContent =
+      document.getElementById('adminMonthRate').textContent=
         Number(d.monthlyMorningRate).toFixed(1);
     })
     .withFailureHandler(err)
@@ -372,113 +659,114 @@ function loadDashboard() {
 
 let adminYear;
 let adminMonth;
-let adminSelectedDate = '';
+let adminSelectedDate='';
 
-function initAdminCalendar() {
-  const now = new Date();
+function initAdminCalendar(){
+  const now=new Date();
 
-  adminYear = now.getFullYear();
-  adminMonth = now.getMonth() + 1;
+  adminYear=now.getFullYear();
+  adminMonth=now.getMonth()+1;
 
   loadAdminCalendar();
 }
 
-function changeAdminMonth(delta) {
-  adminMonth += delta;
+function changeAdminMonth(delta){
+  adminMonth+=delta;
 
-  if (adminMonth > 12) {
-    adminMonth = 1;
+  if(adminMonth>12){
+    adminMonth=1;
     adminYear++;
   }
 
-  if (adminMonth < 1) {
-    adminMonth = 12;
+  if(adminMonth<1){
+    adminMonth=12;
     adminYear--;
   }
 
-  adminSelectedDate = '';
+  adminSelectedDate='';
 
-  document.getElementById('adminAttendees').innerHTML = '';
-  document.getElementById('adminAttendeeCount').textContent =
+  document.getElementById('adminAttendees').innerHTML='';
+  document.getElementById('adminAttendeeCount').textContent=
     '달력에서 날짜를 선택하세요.';
 
   loadAdminCalendar();
 }
 
-function loadAdminCalendar() {
+function loadAdminCalendar(){
   google.script.run
     .withSuccessHandler(renderAdminCalendar)
     .withFailureHandler(err)
-    .getMemberCalendarData(adminYear, adminMonth);
+    .getMemberCalendarData(adminYear,adminMonth);
 }
 
-function renderAdminCalendar(data) {
-  document.getElementById('adminCalendarTitle').textContent =
-    data.year + '년 ' + data.month + '월';
+function renderAdminCalendar(data){
+  document.getElementById('adminCalendarTitle').textContent=
+    data.year+'년 '+data.month+'월';
 
-  const weekdays = ['일','월','화','수','목','금','토'];
+  const weekdays=['일','월','화','수','목','금','토'];
 
-  let html = weekdays.map(d =>
-    '<div class="weekday">' + d + '</div>'
+  let html=weekdays.map(d=>
+    '<div class="weekday">'+d+'</div>'
   ).join('');
 
-  const firstDay = new Date(
-    data.year, data.month - 1, 1
+  const firstDay=new Date(
+    data.year,data.month-1,1
   ).getDay();
 
-  const days = new Date(
-    data.year, data.month, 0
+  const days=new Date(
+    data.year,data.month,0
   ).getDate();
 
-  for (let i = 0; i < firstDay; i++) {
-    html += '<div class="day empty"></div>';
+  for(let i=0;i<firstDay;i++){
+    html+='<div class="day empty"></div>';
   }
 
-  for (let day = 1; day <= days; day++) {
-    const date = data.year + '-' +
-      String(data.month).padStart(2, '0') + '-' +
-      String(day).padStart(2, '0');
+  for(let day=1;day<=days;day++){
+    const date=data.year+'-'+
+      String(data.month).padStart(2,'0')+'-'+
+      String(day).padStart(2,'0');
 
-    const info = data.attendance[date];
-    const count = info ? info.count : 0;
+    const info=data.attendance[date];
+    const count=info?info.count:0;
 
-    const classes = [
+    const classes=[
       'day',
-      count ? 'has' : '',
-      adminSelectedDate === date ? 'selected' : ''
+      count?'has':'',
+      adminSelectedDate===date?'selected':''
     ].filter(Boolean).join(' ');
 
-    html +=
-      '<button class="' + classes + '" ' +
-      'onclick="selectAdminDate(\'' + date + '\')">' +
-        '<span class="num">' + day + '</span>' +
+    html+=
+      '<button class="'+classes+'" '+
+      'onclick="selectAdminDate(\''+date+'\')">'+
+        '<span class="num">'+day+'</span>'+
         (count
-          ? '<span class="count">' + count + '명</span>'
-          : '') +
+          ?'<span class="count">'+count+'명</span>'
+          :'')+
       '</button>';
   }
 
-  document.getElementById('adminCalendar').innerHTML = html;
+  document.getElementById('adminCalendar').innerHTML=html;
 }
 
-function selectAdminDate(date) {
-  adminSelectedDate = date;
+function selectAdminDate(date){
+  adminSelectedDate=date;
+
   loadAdminCalendar();
 
-  document.getElementById('adminSelectedDateTitle').textContent =
-    date + ' 아침기도모임 참석자';
+  document.getElementById('adminSelectedDateTitle').textContent=
+    date+' 아침기도모임 참석자';
 
   google.script.run
-    .withSuccessHandler(names => {
-      document.getElementById('adminAttendeeCount').textContent =
-        '참석자 ' + names.length + '명';
+    .withSuccessHandler(names=>{
+      document.getElementById('adminAttendeeCount').textContent=
+        '참석자 '+names.length+'명';
 
-      document.getElementById('adminAttendees').innerHTML =
+      document.getElementById('adminAttendees').innerHTML=
         names.length
-          ? names.map(name =>
-              '<span class="person">' + esc(name) + '</span>'
-            ).join('')
-          : '<span class="muted">해당 날짜에 기록된 참석자가 없습니다.</span>';
+          ?names.map(name=>
+            '<span class="person">'+esc(name)+'</span>'
+          ).join('')
+          :'<span class="muted">해당 날짜에 기록된 참석자가 없습니다.</span>';
     })
     .withFailureHandler(err)
     .getMorningAttendees(date);
@@ -488,115 +776,114 @@ function selectAdminDate(date) {
    회원 관리
 ===================================== */
 
-function addMemberUI() {
-  const name = document.getElementById('newName').value.trim();
+function addMemberUI(){
+  const name=document.getElementById('newName').value.trim();
 
-  if (!name) {
+  if(!name){
     alert('회원 이름을 입력하세요.');
     return;
   }
 
   google.script.run
-    .withSuccessHandler(r => {
+    .withSuccessHandler(r=>{
       showQR(r);
-      document.getElementById('newName').value = '';
+      document.getElementById('newName').value='';
       loadMembers();
     })
     .withFailureHandler(err)
     .addMember(name);
 }
 
-function showQR(r) {
-  const url =
-    'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' +
+function showQR(r){
+  const url=
+    'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data='+
     encodeURIComponent(r.token);
 
-  document.getElementById('qrResult').innerHTML =
-    '<div class="qr-box">' +
-      '<h3>' + esc(r.name) + ' QR 코드</h3>' +
-      '<img class="qr" src="' + url + '" alt="QR 코드">' +
-      '<p class="muted">QR 토큰</p>' +
-      '<p style="word-break:break-all">' + esc(r.token) + '</p>' +
-      '<button class="secondary" onclick="window.open(' +
-        "'" + url + "','_blank'" +
-      ')">QR 이미지 열기</button>' +
+  document.getElementById('qrResult').innerHTML=
+    '<div class="qr-box">'+
+      '<h3>'+esc(r.name)+' QR 코드</h3>'+
+      '<img class="qr" src="'+url+'" alt="QR 코드">'+
+      '<p class="muted">QR 토큰</p>'+
+      '<p style="word-break:break-all">'+esc(r.token)+'</p>'+
+      '<button class="secondary" onclick="window.open('+
+        "'"+url+"','_blank'"+
+      ')">QR 이미지 열기</button>'+
     '</div>';
 }
 
-function loadMembers() {
+function loadMembers(){
   google.script.run
-    .withSuccessHandler(rows => {
-      let html =
-        '<div class="table-wrap"><table>' +
+    .withSuccessHandler(rows=>{
+      let html=
+        '<div class="table-wrap"><table>'+
         '<tr><th>이름</th><th>상태</th><th>관리</th></tr>';
 
-      rows.forEach(m => {
-        html +=
-          '<tr>' +
-            '<td>' + esc(m.name) + '</td>' +
-            '<td>' + esc(m.status) + '</td>' +
-            '<td><div class="actions">' +
-              '<button class="secondary" onclick="editMember(' +
-                m.row + ',' +
-                "'" + encodeURIComponent(m.name) + "'" +
-              ')">수정</button>' +
-              '<button onclick="viewQR(' + m.row + ')">QR 보기</button>' +
-              '<button class="gray" onclick="reissueQR(' +
-                m.row + ')">QR 재발급</button>' +
-            '</div></td>' +
+      rows.forEach(m=>{
+        html+=
+          '<tr>'+
+            '<td>'+esc(m.name)+'</td>'+
+            '<td>'+esc(m.status)+'</td>'+
+            '<td><div class="actions">'+
+              '<button class="secondary" onclick="editMember('+
+                m.row+','+
+                "'"+encodeURIComponent(m.name)+"'"+
+              ')">수정</button>'+
+              '<button onclick="viewQR('+m.row+')">QR 보기</button>'+
+              '<button class="gray" onclick="reissueQR('+
+                m.row+')">QR 재발급</button>'+
+            '</div></td>'+
           '</tr>';
       });
 
-      html += '</table></div>';
+      html+='</table></div>';
 
-      document.getElementById('memberList').innerHTML = html;
+      document.getElementById('memberList').innerHTML=html;
     })
     .withFailureHandler(err)
     .listMembers();
 }
 
-function editMember(row, encodedName) {
-  const name = decodeURIComponent(encodedName);
-  const newName = prompt('회원 이름 수정', name);
+function editMember(row,encodedName){
+  const name=decodeURIComponent(encodedName);
+  const newName=prompt('회원 이름 수정',name);
 
-  if (newName === null) return;
+  if(newName===null)return;
 
-  if (!newName.trim()) {
+  if(!newName.trim()){
     alert('이름을 입력하세요.');
     return;
   }
 
-  const active = confirm(
+  const active=confirm(
     '확인: 활성 회원\n취소: 비활성 회원'
   );
 
   google.script.run
-    .withSuccessHandler(() => {
+    .withSuccessHandler(()=>{
       loadMembers();
       loadStats();
     })
     .withFailureHandler(err)
-    .updateMember(row, newName, active ? '활성' : '비활성');
+    .updateMember(row,newName,active?'활성':'비활성');
 }
 
-function viewQR(row) {
+function viewQR(row){
   google.script.run
-    .withSuccessHandler(rows => {
-      const m = rows.find(x => x.row === row);
-
-      if (m) showQR(m);
+    .withSuccessHandler(rows=>{
+      const m=rows.find(x=>x.row===row);
+      if(m)showQR(m);
     })
     .withFailureHandler(err)
     .listMembers();
 }
 
-function reissueQR(row) {
-  if (!confirm(
+function reissueQR(row){
+  if(!confirm(
     'QR을 재발급할까요? 과거 출석기록은 새 QR로 이어집니다.'
-  )) return;
+  ))return;
 
   google.script.run
-    .withSuccessHandler(r => {
+    .withSuccessHandler(r=>{
       showQR(r);
       loadMembers();
     })
@@ -608,31 +895,31 @@ function reissueQR(row) {
    회원별 통계
 ===================================== */
 
-function loadStats() {
+function loadStats(){
   google.script.run
-    .withSuccessHandler(rows => {
-      let html =
-        '<div class="table-wrap"><table>' +
-        '<tr>' +
-          '<th>회원 이름</th>' +
-          '<th>상태</th>' +
-          '<th>아침기도모임</th>' +
-          '<th>수요일 저녁모임</th>' +
+    .withSuccessHandler(rows=>{
+      let html=
+        '<div class="table-wrap"><table>'+
+        '<tr>'+
+          '<th>회원 이름</th>'+
+          '<th>상태</th>'+
+          '<th>아침기도모임</th>'+
+          '<th>수요일 저녁모임</th>'+
         '</tr>';
 
-      rows.forEach(m => {
-        html +=
-          '<tr>' +
-            '<td>' + esc(m.name) + '</td>' +
-            '<td>' + esc(m.status) + '</td>' +
-            '<td>' + m.morning + '회</td>' +
-            '<td>' + m.evening + '회</td>' +
+      rows.forEach(m=>{
+        html+=
+          '<tr>'+
+            '<td>'+esc(m.name)+'</td>'+
+            '<td>'+esc(m.status)+'</td>'+
+            '<td>'+m.morning+'회</td>'+
+            '<td>'+m.evening+'회</td>'+
           '</tr>';
       });
 
-      html += '</table></div>';
+      html+='</table></div>';
 
-      document.getElementById('memberStats').innerHTML = html;
+      document.getElementById('memberStats').innerHTML=html;
     })
     .withFailureHandler(err)
     .getMemberStats();
@@ -642,13 +929,13 @@ function loadStats() {
    관리자 수동 출석 수정
 ===================================== */
 
-function loadManualMembers() {
+function loadManualMembers(){
   google.script.run
-    .withSuccessHandler(rows => {
-      document.getElementById('manualMember').innerHTML =
-        rows.map(m =>
-          '<option value="' + esc(m.token) + '">' +
-            esc(m.name) + ' (' + esc(m.status) + ')' +
+    .withSuccessHandler(rows=>{
+      document.getElementById('manualMember').innerHTML=
+        rows.map(m=>
+          '<option value="'+esc(m.token)+'">'+
+            esc(m.name)+' ('+esc(m.status)+')'+
           '</option>'
         ).join('');
     })
@@ -656,170 +943,161 @@ function loadManualMembers() {
     .listMembers();
 }
 
-function saveManual() {
-  const token = document.getElementById('manualMember').value;
-  const date = document.getElementById('manualDate').value;
-  const meeting = document.getElementById('manualMeeting').value;
-  const status = document.getElementById('manualStatus').value;
+function saveManual(){
+  const token=document.getElementById('manualMember').value;
+  const date=document.getElementById('manualDate').value;
+  const meeting=document.getElementById('manualMeeting').value;
+  const status=document.getElementById('manualStatus').value;
 
-  if (!token || !date) {
+  if(!token||!date){
     alert('회원과 날짜를 선택하세요.');
     return;
   }
 
-  const action = status === '출석' ? '출석 처리' : '출석 취소';
+  const action=status==='출석'?'출석 처리':'출석 취소';
 
-  if (!confirm(
-    date + ' ' + meeting + ' 모임을 ' + action + '할까요?'
-  )) return;
+  if(!confirm(
+    date+' '+meeting+' 모임을 '+action+'할까요?'
+  ))return;
 
   google.script.run
-    .withSuccessHandler(() => {
+    .withSuccessHandler(()=>{
       alert('출석기록을 수정했습니다.');
       loadStats();
       loadDashboard();
       loadAdminCalendar();
     })
     .withFailureHandler(err)
-    .setAttendance(token, date, meeting, status);
+    .setAttendance(token,date,meeting,status);
 }
 
 /* =====================================
-   회원용 페이지
+   회원용 페이지 관련 함수
 ===================================== */
 
 let memberYear;
 let memberMonth;
-let memberSelectedDate = '';
+let memberSelectedDate='';
 
-function initMemberPage() {
-  const now = new Date();
+function initMemberPage(){
+  const now=new Date();
 
-  memberYear = now.getFullYear();
-  memberMonth = now.getMonth() + 1;
+  memberYear=now.getFullYear();
+  memberMonth=now.getMonth()+1;
 
   loadMemberSummary();
   loadMemberCalendar();
 }
 
-function loadMemberSummary() {
+function loadMemberSummary(){
   google.script.run
-    .withSuccessHandler(d => {
-      document.getElementById('memberToday').textContent =
-        d.today;
-
-      document.getElementById('memberTotal').textContent =
-        d.totalMembers;
-
-      document.getElementById('memberTodayCount').textContent =
-        d.todayCount;
-
-      document.getElementById('memberTopName').textContent =
-        d.topName;
-
-      document.getElementById('memberTopCount').textContent =
-        d.topCount + '회 참석';
+    .withSuccessHandler(d=>{
+      document.getElementById('memberToday').textContent=d.today;
+      document.getElementById('memberTotal').textContent=d.totalMembers;
+      document.getElementById('memberTodayCount').textContent=d.todayCount;
+      document.getElementById('memberTopName').textContent=d.topName;
+      document.getElementById('memberTopCount').textContent=d.topCount+'회 참석';
     })
     .withFailureHandler(err)
     .getMemberPageSummary();
 }
 
-function changeMemberMonth(delta) {
-  memberMonth += delta;
+function changeMemberMonth(delta){
+  memberMonth+=delta;
 
-  if (memberMonth > 12) {
-    memberMonth = 1;
+  if(memberMonth>12){
+    memberMonth=1;
     memberYear++;
   }
 
-  if (memberMonth < 1) {
-    memberMonth = 12;
+  if(memberMonth<1){
+    memberMonth=12;
     memberYear--;
   }
 
-  memberSelectedDate = '';
+  memberSelectedDate='';
 
-  document.getElementById('memberAttendees').innerHTML = '';
-  document.getElementById('memberAttendeeCount').textContent =
+  document.getElementById('memberAttendees').innerHTML='';
+  document.getElementById('memberAttendeeCount').textContent=
     '달력에서 날짜를 선택하세요.';
 
   loadMemberCalendar();
 }
 
-function loadMemberCalendar() {
+function loadMemberCalendar(){
   google.script.run
     .withSuccessHandler(renderMemberCalendar)
     .withFailureHandler(err)
-    .getMemberCalendarData(memberYear, memberMonth);
+    .getMemberCalendarData(memberYear,memberMonth);
 }
 
-function renderMemberCalendar(data) {
-  document.getElementById('memberCalendarTitle').textContent =
-    data.year + '년 ' + data.month + '월';
+function renderMemberCalendar(data){
+  document.getElementById('memberCalendarTitle').textContent=
+    data.year+'년 '+data.month+'월';
 
-  const weekdays = ['일','월','화','수','목','금','토'];
+  const weekdays=['일','월','화','수','목','금','토'];
 
-  let html = weekdays.map(d =>
-    '<div class="weekday">' + d + '</div>'
+  let html=weekdays.map(d=>
+    '<div class="weekday">'+d+'</div>'
   ).join('');
 
-  const firstDay = new Date(
-    data.year, data.month - 1, 1
+  const firstDay=new Date(
+    data.year,data.month-1,1
   ).getDay();
 
-  const days = new Date(
-    data.year, data.month, 0
+  const days=new Date(
+    data.year,data.month,0
   ).getDate();
 
-  for (let i = 0; i < firstDay; i++) {
-    html += '<div class="day empty"></div>';
+  for(let i=0;i<firstDay;i++){
+    html+='<div class="day empty"></div>';
   }
 
-  for (let day = 1; day <= days; day++) {
-    const date = data.year + '-' +
-      String(data.month).padStart(2, '0') + '-' +
-      String(day).padStart(2, '0');
+  for(let day=1;day<=days;day++){
+    const date=data.year+'-'+
+      String(data.month).padStart(2,'0')+'-'+
+      String(day).padStart(2,'0');
 
-    const info = data.attendance[date];
-    const count = info ? info.count : 0;
+    const info=data.attendance[date];
+    const count=info?info.count:0;
 
-    const classes = [
+    const classes=[
       'day',
-      count ? 'has' : '',
-      memberSelectedDate === date ? 'selected' : ''
+      count?'has':'',
+      memberSelectedDate===date?'selected':''
     ].filter(Boolean).join(' ');
 
-    html +=
-      '<button class="' + classes + '" ' +
-      'onclick="selectMemberDate(\'' + date + '\')">' +
-        '<span class="num">' + day + '</span>' +
+    html+=
+      '<button class="'+classes+'" '+
+      'onclick="selectMemberDate(\''+date+'\')">'+
+        '<span class="num">'+day+'</span>'+
         (count
-          ? '<span class="count">' + count + '명</span>'
-          : '') +
+          ?'<span class="count">'+count+'명</span>'
+          :'')+
       '</button>';
   }
 
-  document.getElementById('memberCalendar').innerHTML = html;
+  document.getElementById('memberCalendar').innerHTML=html;
 }
 
-function selectMemberDate(date) {
-  memberSelectedDate = date;
+function selectMemberDate(date){
+  memberSelectedDate=date;
   loadMemberCalendar();
 
-  document.getElementById('memberSelectedDateTitle').textContent =
-    date + ' 아침기도모임 참석자';
+  document.getElementById('memberSelectedDateTitle').textContent=
+    date+' 아침기도모임 참석자';
 
   google.script.run
-    .withSuccessHandler(names => {
-      document.getElementById('memberAttendeeCount').textContent =
-        '참석자 ' + names.length + '명';
+    .withSuccessHandler(names=>{
+      document.getElementById('memberAttendeeCount').textContent=
+        '참석자 '+names.length+'명';
 
-      document.getElementById('memberAttendees').innerHTML =
+      document.getElementById('memberAttendees').innerHTML=
         names.length
-          ? names.map(name =>
-              '<span class="person">' + esc(name) + '</span>'
-            ).join('')
-          : '<span class="muted">해당 날짜에 기록된 참석자가 없습니다.</span>';
+          ?names.map(name=>
+            '<span class="person">'+esc(name)+'</span>'
+          ).join('')
+          :'<span class="muted">해당 날짜에 기록된 참석자가 없습니다.</span>';
     })
     .withFailureHandler(err)
     .getMorningAttendees(date);
@@ -828,8 +1106,12 @@ function selectMemberDate(date) {
 /* =====================================
    관리자 페이지 시작
 ===================================== */
-if(adminSession){ startAdmin(); }
-else { document.getElementById('loginBox').style.display='block'; }
+
+if(adminSession){
+  startAdmin();
+}else{
+  document.getElementById('loginBox').style.display='block';
+}
 </script>
 
 </body>
