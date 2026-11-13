@@ -81,6 +81,64 @@
       cursor: not-allowed;
     }
 
+
+    /* 화면 아래쪽의 Apps Script 주소 접기/펼치기 */
+    .endpoint-drawer {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 4px 14px calc(6px + env(safe-area-inset-bottom));
+      pointer-events: none;
+    }
+
+    .endpoint-toggle {
+      pointer-events: auto;
+      width: 42px;
+      min-height: 28px;
+      padding: 2px 8px;
+      margin: 0;
+      border-radius: 14px 14px 8px 8px;
+      background: #334155;
+      color: #e2e8f0;
+      font-size: 18px;
+      line-height: 1;
+      box-shadow: 0 2px 10px rgba(0,0,0,.25);
+    }
+
+    .endpoint-panel {
+      pointer-events: auto;
+      width: min(100%, 620px);
+      margin-top: 6px;
+      padding: 12px;
+      border: 1px solid #475569;
+      border-radius: 12px;
+      background: #1e293b;
+      box-shadow: 0 4px 18px rgba(0,0,0,.35);
+    }
+
+    .endpoint-panel[hidden] {
+      display: none;
+    }
+
+    .endpoint-panel label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: .85rem;
+      color: #cbd5e1;
+    }
+
+    .endpoint-panel input {
+      width: 100%;
+      margin: 0;
+      padding: 10px;
+      font-size: .85rem;
+    }
+
     /* 카메라 영역 */
     .camera-wrap {
       position: relative;
@@ -209,14 +267,7 @@
 
   <section class="panel">
 
-    <label for="endpoint">Apps Script 웹앱 URL</label>
 
-    <input
-      id="endpoint"
-      type="url"
-      value="https://script.google.com/macros/s/AKfycbx6HK7qLTZGvJVyguvH0qgsaJXEJhHFhX-axeo7ZJqdf9lztk8tl4xMm1YP1b2qGb7A/exec"
-      placeholder="Apps Script 웹앱 URL"
-    >
 
     <!-- 1. 카메라 영상 -->
     <div class="camera-wrap">
@@ -266,9 +317,51 @@
 
 </main>
 
+
+<!-- Apps Script 주소는 기본적으로 숨기고, 아래 화살표로 열 수 있습니다. -->
+<div class="endpoint-drawer">
+  <button
+    id="endpointToggle"
+    class="endpoint-toggle"
+    type="button"
+    aria-label="웹앱 주소 표시"
+    aria-expanded="false"
+    aria-controls="endpointPanel"
+  >⌃</button>
+
+  <div id="endpointPanel" class="endpoint-panel" hidden>
+    <label for="endpoint">Apps Script 웹앱 URL</label>
+    <input
+      id="endpoint"
+      type="url"
+      value="https://script.google.com/macros/s/AKfycbx6HK7qLTZGvJVyguvH0qgsaJXEJhHFhX-axeo7ZJqdf9lztk8tl4xMm1YP1b2qGb7A/exec"
+      placeholder="Apps Script 웹앱 URL"
+    >
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 
 <script>
+
+
+/* =====================================
+   Apps Script 주소 접기/펼치기
+===================================== */
+
+const endpointToggle = document.querySelector('#endpointToggle');
+const endpointPanel = document.querySelector('#endpointPanel');
+
+endpointToggle.onclick = () => {
+  const willOpen = endpointPanel.hidden;
+  endpointPanel.hidden = !willOpen;
+  endpointToggle.textContent = willOpen ? '⌄' : '⌃';
+  endpointToggle.setAttribute('aria-expanded', String(willOpen));
+  endpointToggle.setAttribute(
+    'aria-label',
+    willOpen ? '웹앱 주소 숨기기' : '웹앱 주소 표시'
+  );
+};
 
 /* =====================================
    출석 메시지
