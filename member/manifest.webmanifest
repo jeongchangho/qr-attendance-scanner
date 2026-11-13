@@ -1,41 +1,4 @@
-{
-  "id": "./",
-  "name": "순천지역WM(회원)",
-  "short_name": "WM회원",
-  "description": "순천지역WM 회원 출석 및 일정 확인",
-  "start_url": "./",
-  "scope": "./",
-  "display": "standalone",
-  "display_override": [
-    "standalone"
-  ],
-  "orientation": "portrait",
-  "background_color": "#e4f1ff",
-  "theme_color": "#1769e0",
-  "icons": [
-    {
-      "src": "../icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "../icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "../icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "../icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
-  ]
-}
+const CACHE_NAME='wm-member-v5';
+self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(['./','./index.html','./manifest.webmanifest'])).catch(()=>{}))});
+self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
+self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(fetch(e.request).then(r=>{const copy=r.clone();caches.open(CACHE_NAME).then(c=>c.put(e.request,copy));return r}).catch(()=>caches.match(e.request)))});
