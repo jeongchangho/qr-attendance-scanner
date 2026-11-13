@@ -74,11 +74,17 @@ function selectScheduleDate(ds){scheduleSelected=ds;renderScheduleCalendar();ren
 function renderSelectedSchedule(ds){const rows=(window.scheduleRows||[]).filter(x=>x.date===ds);$('selectedSchedule').innerHTML='<b>'+esc(ds)+'</b>'+(rows.length?rows.map(x=>`<div class="schedule-item"><b>${esc(x.title)}</b><div>시간: ${esc(x.time||'-')}</div><div>장소: ${esc(x.place||'-')}</div><div>상세 내용: ${esc(x.detail||'-')}</div></div>`).join(''):'<p class="muted">이 날짜에는 등록된 일정이 없습니다.</p>')}
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
 init();
-window.addEventListener('DOMContentLoaded',()=>{
-  const splash=document.getElementById('splashScreen');
-  window.setTimeout(()=>{
+// 시작 화면: 이 스크립트는 body 맨 아래에서 실행되므로
+// DOMContentLoaded 이벤트를 기다리지 않고 바로 타이머를 시작합니다.
+const splash = document.getElementById('splashScreen');
+
+if (splash) {
+  window.setTimeout(() => {
     splash.classList.add('hide');
-    window.setTimeout(()=>{splash.style.display='none';},260);
-  },1500);
-});
+
+    window.setTimeout(() => {
+      splash.style.display = 'none';
+    }, 300);
+  }, 1500);
+}
 </script></body></html>
