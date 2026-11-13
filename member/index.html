@@ -3,6 +3,16 @@
 <meta name="theme-color" content="#1769e0"><link rel="manifest" href="./manifest.webmanifest">
 <title>순천지역WM(회원)</title>
 <style>
+
+#splashScreen{
+  position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;background:#e4f1ff;color:#24527a;
+  opacity:1;transition:opacity .25s ease;
+}
+#splashScreen.hide{opacity:0;pointer-events:none}
+.splash-title{font-size:clamp(30px,6vw,46px);font-weight:800;letter-spacing:.04em}
+.splash-subtitle{margin-top:12px;font-size:14px;color:#527797;letter-spacing:.08em;text-align:center}
+
 *{box-sizing:border-box}body{margin:0;background:#f3f6fb;color:#17243a;font-family:system-ui,sans-serif}
 header{background:#1769e0;color:white;padding:16px 18px;font-weight:800;font-size:20px}
 header small{display:block;font-size:12px;font-weight:500;margin-top:4px;opacity:.9}
@@ -22,6 +32,7 @@ button{font:inherit;border:0;border-radius:9px;padding:10px 12px;background:#176
 .schedule-item{padding:12px;background:#f7f9fc;border-radius:10px;margin:8px 0}.muted{color:#68778c;font-size:12px}
 @media(max-width:520px){main{padding:10px}.grid{gap:5px}.stat{padding:9px}.label{font-size:11px}.value{font-size:19px}.bar-row{grid-template-columns:38px minmax(50px,1fr) 38px;gap:6px}}
 </style></head><body>
+<section id="splashScreen" aria-label="순천지역WM 시작 화면"><div class="splash-title">순천지역WM</div><div class="splash-subtitle">하나님과 동행하는 순천지역WM</div></section>
 <header>순천지역WM<small>하나님과 동행하는 순천지역WM</small></header>
 <main>
 <div class="tabs"><button id="tabAttendance" class="active" onclick="showTab('attendance')">출석 현황</button><button id="tabSchedule" onclick="showTab('schedule')">일정 안내</button></div>
@@ -63,4 +74,11 @@ function selectScheduleDate(ds){scheduleSelected=ds;renderScheduleCalendar();ren
 function renderSelectedSchedule(ds){const rows=(window.scheduleRows||[]).filter(x=>x.date===ds);$('selectedSchedule').innerHTML='<b>'+esc(ds)+'</b>'+(rows.length?rows.map(x=>`<div class="schedule-item"><b>${esc(x.title)}</b><div>시간: ${esc(x.time||'-')}</div><div>장소: ${esc(x.place||'-')}</div><div>상세 내용: ${esc(x.detail||'-')}</div></div>`).join(''):'<p class="muted">이 날짜에는 등록된 일정이 없습니다.</p>')}
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
 init();
+window.addEventListener('DOMContentLoaded',()=>{
+  const splash=document.getElementById('splashScreen');
+  window.setTimeout(()=>{
+    splash.classList.add('hide');
+    window.setTimeout(()=>{splash.style.display='none';},260);
+  },1500);
+});
 </script></body></html>
