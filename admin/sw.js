@@ -1,5 +1,5 @@
 
-const C = 'admin-pwa-v4';
+const C = 'admin-pwa-v5';
 
 self.addEventListener('install', event => {
   event.waitUntil(
@@ -7,7 +7,7 @@ self.addEventListener('install', event => {
       cache.addAll([
         './',
         './index.html',
-        './manifest.webmanifest'
+        './manifest.webmanifest', './icon-192.png', './icon-512.png'
       ])
     )
   );
