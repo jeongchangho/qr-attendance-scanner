@@ -235,6 +235,72 @@
       max-height: 130px;
     }
 
+    /* 태블릿 가로 화면: 조작부는 필요한 높이만 사용하고 카메라 영역을 넓게 */
+    @media (orientation: landscape) {
+      body:fullscreen {
+        height: 100dvh;
+        min-height: 100dvh;
+        overflow: hidden;
+      }
+
+      body:fullscreen main {
+        height: 100dvh;
+        min-height: 0;
+        padding: max(6px, env(safe-area-inset-top)) 14px max(6px, env(safe-area-inset-bottom));
+      }
+
+      body:fullscreen main > h1 {
+        margin: 2px 0 6px;
+        font-size: 1.15rem;
+      }
+
+      body:fullscreen .panel {
+        flex: 1 1 0;
+        min-height: 0;
+        padding: 10px;
+        gap: 4px;
+      }
+
+      body:fullscreen .camera-wrap {
+        flex: 1 1 0;
+        min-height: 0;
+        height: 0;
+        margin-top: 2px;
+      }
+
+      body:fullscreen video {
+        width: 100%;
+        height: 100%;
+        aspect-ratio: auto;
+        object-fit: cover;
+        /* 가로 화면에서는 좌우를 조금 확대해 양쪽 가장자리를 잘라냅니다. */
+        transform: scaleX(-1) scale(1.14, 1);
+        transform-origin: center center;
+      }
+
+      body:fullscreen .status {
+        min-height: 48px;
+        padding: 8px 12px;
+        margin: 4px 0;
+      }
+
+      body:fullscreen .panel > button {
+        flex: 0 0 42px;
+        min-height: 42px;
+        padding: 8px 12px;
+        margin: 3px 0;
+      }
+
+      body:fullscreen .endpoint-drawer {
+        flex: 0 0 auto;
+        padding-top: 2px;
+      }
+
+      body:fullscreen .endpoint-toggle {
+        min-height: 26px;
+      }
+    }
+
     /* 카메라 영역 */
     .camera-wrap {
       position: relative;
