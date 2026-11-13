@@ -9,6 +9,15 @@
   <title>QR스캐너</title>
 
   <style>
+
+#splashScreen{
+  position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;background:#e4f1ff;color:#24527a;
+  opacity:1;transition:opacity .25s ease;
+}
+#splashScreen.hide{opacity:0;pointer-events:none}
+.splash-title{font-size:clamp(30px,6vw,46px);font-weight:800;letter-spacing:.04em}
+.splash-subtitle{margin-top:12px;font-size:14px;color:#527797;letter-spacing:.08em;text-align:center}
     * {
       box-sizing: border-box;
     }
@@ -190,6 +199,7 @@
 </head>
 
 <body>
+<section id="splashScreen" aria-label="순천지역WM 시작 화면"><div class="splash-title">순천지역WM</div><div class="splash-subtitle">하나님과 동행하는 순천지역WM</div></section>
 
 <main>
 
@@ -777,6 +787,13 @@ if ('serviceWorker' in navigator) {
 
 }
 
+window.addEventListener('DOMContentLoaded',()=>{
+  const splash=document.getElementById('splashScreen');
+  window.setTimeout(()=>{
+    splash.classList.add('hide');
+    window.setTimeout(()=>{splash.style.display='none';},260);
+  },1500);
+});
 </script>
 
 </body>
