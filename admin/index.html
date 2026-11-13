@@ -13,6 +13,22 @@
   --green:#16865b;
 }
 *{box-sizing:border-box}
+#splashScreen{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  background:#e4f1ff;
+  color:#24527a;
+  opacity:1;
+  transition:opacity .25s ease;
+}
+#splashScreen.hide{opacity:0;pointer-events:none}
+.splash-title{font-size:clamp(30px,6vw,46px);font-weight:800;letter-spacing:.04em}
+.splash-subtitle{margin-top:12px;font-size:14px;color:#527797;letter-spacing:.08em}
 body{
   font-family:system-ui,-apple-system,sans-serif;
   max-width:1100px;
@@ -208,12 +224,10 @@ th{color:#667085;background:#f8f9fc}
 
 <body>
 
-<!-- 관리자 로그인 -->
-<section id="loginBox" class="card" style="max-width:420px;margin:12vh auto;display:none">
-  <h2>순천지역WM 관리자 로그인</h2>
-  <input id="adminPassword" type="password" placeholder="공통 비밀번호" style="width:100%;margin:8px 0">
-  <button id="loginButton" onclick="adminLogin()" style="width:100%">로그인</button>
-  <p id="loginError" class="muted"></p>
+<!-- 시작 화면 -->
+<section id="splashScreen" aria-label="순천지역WM 시작 화면">
+  <div class="splash-title">순천지역WM</div>
+  <div class="splash-subtitle">출석관리 시스템</div>
 </section>
 
 <div id="adminPage">
@@ -370,17 +384,7 @@ th{color:#667085;background:#f8f9fc}
 const PAGE = 'admin';
 const API = 'https://script.google.com/macros/s/AKfycbx6HK7qLTZGvJVyguvH0qgsaJXEJhHFhX-axeo7ZJqdf9lztk8tl4xMm1YP1b2qGb7A/exec';
 
-/*
- * 로그인 토큰을 저장하거나 재사용하지 않습니다.
- * 페이지를 새로 열 때마다 반드시 로그인해야 합니다.
- */
-let adminSession = '';
-
-try {
-  localStorage.removeItem('wm_session');
-} catch(e) {
-  console.warn('이전 로그인 정보 정리 불가',e);
-}
+/* 관리자 화면은 로그인 없이 시작합니다. */
 
 /* =====================================
    JSONP API 통신
@@ -417,10 +421,7 @@ function apiCall(method,params={}) {
       reject(new Error('서버 연결 실패'));
     };
 
-    const q=new URLSearchParams({
-      ...params,
-      session:adminSession
-    });
+    const q=new URLSearchParams(params);
 
     script.src=
       API+
@@ -557,46 +558,7 @@ const google={
   }
 };
 
-/* =====================================
-   관리자 로그인
-===================================== */
-
-async function adminLogin(){
-  const pw=document.getElementById('adminPassword').value;
-  const errBox=document.getElementById('loginError');
-  const btn=document.getElementById('loginButton');
-
-  if(!pw){
-    errBox.textContent='비밀번호를 입력하세요.';
-    return;
-  }
-
-  btn.disabled=true;
-  errBox.textContent='로그인 확인 중...';
-
-  try{
-    const result=await apiCall('login',{
-      password:pw
-    });
-
-    if(!result || !result.token){
-      throw new Error('로그인 토큰을 받지 못했습니다.');
-    }
-
-    adminSession=result.token;
-    startAdmin();
-  }
-  catch(e){
-    adminSession='';
-    errBox.textContent=e.message||String(e);
-  }
-  finally{
-    btn.disabled=false;
-  }
-}
-
 function startAdmin(){
-  document.getElementById('loginBox').style.display='none';
   document.getElementById('adminPage').style.display='block';
 
   const now=new Date();
@@ -1162,14 +1124,18 @@ function selectMemberDate(date){
    페이지 최초 실행
 ===================================== */
 
-/*
- * 이 페이지는 항상 로그인 화면으로 시작합니다.
- * localStorage의 과거 토큰으로 관리자 화면에 진입하지 않습니다.
- */
-adminSession='';
-
 document.getElementById('adminPage').style.display='none';
-document.getElementById('loginBox').style.display='block';
+
+window.addEventListener('DOMContentLoaded',()=>{
+  const splash=document.getElementById('splashScreen');
+  window.setTimeout(()=>{
+    splash.classList.add('hide');
+    window.setTimeout(()=>{
+      splash.style.display='none';
+      startAdmin();
+    },260);
+  },1500);
+});
 </script>
 
 </body>
