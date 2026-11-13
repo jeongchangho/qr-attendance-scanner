@@ -345,12 +345,18 @@ th{color:#667085;background:#f8f9fc}
       </div>
     </div>
     <div class="card">
+      <h3 id="scheduleListHeading">이번 달 일정</h3>
+      <div id="adminScheduleList"></div>
+    </div>
+    <div class="card">
+      <h3>월별 일정 달력</h3>
       <div class="calendar-head">
         <button class="secondary" onclick="changeScheduleMonth(-1)">이전</button>
         <strong id="scheduleMonthTitle"></strong>
         <button class="secondary" onclick="changeScheduleMonth(1)">다음</button>
       </div>
-      <div id="adminScheduleList"></div>
+      <div class="calendar" id="adminScheduleCalendar"></div>
+      <div class="notice" id="adminSelectedSchedule"><span class="muted">달력에서 날짜를 선택하면 시간과 상세 내용이 표시됩니다.</span></div>
     </div>
   </section>
 
@@ -1041,56 +1047,44 @@ function saveManual(){
 /* =====================================
    관리자 일정 관리
 ===================================== */
-let scheduleAdminYear, scheduleAdminMonth;
+let scheduleAdminYear, scheduleAdminMonth, scheduleAdminSelectedDate='';
 function initScheduleAdmin(){
-  const n=new Date();
-  scheduleAdminYear=n.getFullYear(); scheduleAdminMonth=n.getMonth()+1;
-  if(!document.getElementById('scheduleDate').value)
-    document.getElementById('scheduleDate').value=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');
+  const n=new Date();scheduleAdminYear=n.getFullYear();scheduleAdminMonth=n.getMonth()+1;scheduleAdminSelectedDate='';
+  if(!document.getElementById('scheduleDate').value)document.getElementById('scheduleDate').value=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');
   loadAdminSchedules();
 }
-function changeScheduleMonth(delta){
-  scheduleAdminMonth+=delta;
-  if(scheduleAdminMonth>12){scheduleAdminMonth=1;scheduleAdminYear++;}
-  if(scheduleAdminMonth<1){scheduleAdminMonth=12;scheduleAdminYear--;}
-  loadAdminSchedules();
-}
+function changeScheduleMonth(delta){scheduleAdminMonth+=delta;if(scheduleAdminMonth>12){scheduleAdminMonth=1;scheduleAdminYear++;}if(scheduleAdminMonth<1){scheduleAdminMonth=12;scheduleAdminYear--;}scheduleAdminSelectedDate='';loadAdminSchedules();}
 function loadAdminSchedules(){
   google.script.run.withSuccessHandler(rows=>{
+    window.adminScheduleCache=rows||[];
     document.getElementById('scheduleMonthTitle').textContent=scheduleAdminYear+'년 '+scheduleAdminMonth+'월';
+    document.getElementById('scheduleListHeading').textContent=scheduleAdminYear+'년 '+scheduleAdminMonth+'월 일정';
     const box=document.getElementById('adminScheduleList');
-    box.innerHTML=rows.length?rows.map(x=>`<div class="notice">
-      <strong>${esc(x.date)} · ${esc(x.title)}</strong>
-      <div>${esc(x.time)} ${esc(x.place)}</div><div>${esc(x.detail)}</div>
-      <div class="actions"><button class="secondary" onclick="editSchedule('${esc(x.id)}')">수정</button>
-      <button class="danger" onclick="removeSchedule('${esc(x.id)}')">삭제</button></div></div>`).join(''):'<p class="muted">등록된 일정이 없습니다.</p>';
-    window.adminScheduleCache=rows;
+    box.innerHTML=rows.length?rows.map(x=>`<div class="notice"><strong>${esc(x.date)} · ${esc(x.title)}</strong></div>`).join(''):'<p class="muted">등록된 일정이 없습니다.</p>';
+    renderAdminScheduleCalendar();
+    if(scheduleAdminSelectedDate)renderAdminSelectedSchedule(scheduleAdminSelectedDate);else document.getElementById('adminSelectedSchedule').innerHTML='<span class="muted">달력에서 날짜를 선택하면 시간과 상세 내용이 표시됩니다.</span>';
   }).withFailureHandler(err).getMemberSchedules(scheduleAdminYear,scheduleAdminMonth);
 }
+function renderAdminScheduleCalendar(){
+  const el=document.getElementById('adminScheduleCalendar'),first=new Date(scheduleAdminYear,scheduleAdminMonth-1,1).getDay(),last=new Date(scheduleAdminYear,scheduleAdminMonth,0).getDate();
+  const weekdays=['일','월','화','수','목','금','토'];let html=weekdays.map(d=>'<div class="weekday">'+d+'</div>').join('');
+  for(let i=0;i<first;i++)html+='<div class="day empty"></div>';
+  const counts={};(window.adminScheduleCache||[]).forEach(x=>counts[x.date]=(counts[x.date]||0)+1);
+  for(let day=1;day<=last;day++){const date=scheduleAdminYear+'-'+String(scheduleAdminMonth).padStart(2,'0')+'-'+String(day).padStart(2,'0'),count=counts[date]||0;const classes=['day',count?'has':'',scheduleAdminSelectedDate===date?'selected':''].filter(Boolean).join(' ');html+='<button class="'+classes+'" onclick="selectAdminScheduleDate(\''+date+'\')"><span class="num">'+day+'</span>'+(count?'<span class="count">일정 '+count+'개</span>':'')+'</button>';}
+  el.innerHTML=html;
+}
+function selectAdminScheduleDate(date){scheduleAdminSelectedDate=date;renderAdminScheduleCalendar();renderAdminSelectedSchedule(date);}
+function renderAdminSelectedSchedule(date){
+  const rows=(window.adminScheduleCache||[]).filter(x=>x.date===date),box=document.getElementById('adminSelectedSchedule');
+  box.innerHTML='<strong>'+esc(date)+'</strong>'+(rows.length?rows.map(x=>`<div class="notice"><strong>${esc(x.title)}</strong><div>시간: ${esc(x.time||'-')}</div><div>장소: ${esc(x.place||'-')}</div><div>상세 내용: ${esc(x.detail||'-')}</div><div class="actions"><button class="secondary" onclick="editSchedule('${esc(x.id)}')">수정</button><button class="danger" onclick="removeSchedule('${esc(x.id)}')">삭제</button></div></div>`).join(''):'<p class="muted">이 날짜에는 등록된 일정이 없습니다.</p>');
+}
 function saveScheduleUI(){
-  const data={id:document.getElementById('scheduleId').value,date:document.getElementById('scheduleDate').value,
-    title:document.getElementById('scheduleTitle').value,time:document.getElementById('scheduleTime').value,
-    place:document.getElementById('schedulePlace').value,detail:document.getElementById('scheduleDetail').value};
-  google.script.run.withSuccessHandler(()=>{alert('일정을 저장했습니다.');resetScheduleForm();loadAdminSchedules();})
-    .withFailureHandler(err).saveSchedule(data);
+  const data={id:document.getElementById('scheduleId').value,date:document.getElementById('scheduleDate').value,title:document.getElementById('scheduleTitle').value,time:document.getElementById('scheduleTime').value,place:document.getElementById('schedulePlace').value,detail:document.getElementById('scheduleDetail').value};
+  google.script.run.withSuccessHandler(()=>{alert('일정을 저장했습니다.');resetScheduleForm();scheduleAdminSelectedDate=data.date;loadAdminSchedules();}).withFailureHandler(err).saveSchedule(data);
 }
-function editSchedule(id){
-  const x=(window.adminScheduleCache||[]).find(v=>v.id===id); if(!x)return;
-  document.getElementById('scheduleId').value=x.id; document.getElementById('scheduleDate').value=x.date;
-  document.getElementById('scheduleTitle').value=x.title; document.getElementById('scheduleTime').value=x.time;
-  document.getElementById('schedulePlace').value=x.place; document.getElementById('scheduleDetail').value=x.detail;
-  document.getElementById('scheduleFormTitle').textContent='일정 수정';
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-function resetScheduleForm(){
-  ['scheduleId','scheduleTitle','scheduleTime','schedulePlace','scheduleDetail'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('scheduleFormTitle').textContent='일정 등록';
-}
-function removeSchedule(id){
-  if(!confirm('이 일정을 삭제할까요?'))return;
-  google.script.run.withSuccessHandler(()=>{alert('일정을 삭제했습니다.');loadAdminSchedules();})
-    .withFailureHandler(err).deleteSchedule(id);
-}
+function editSchedule(id){const x=(window.adminScheduleCache||[]).find(v=>v.id===id);if(!x)return;document.getElementById('scheduleId').value=x.id;document.getElementById('scheduleDate').value=x.date;document.getElementById('scheduleTitle').value=x.title;document.getElementById('scheduleTime').value=x.time;document.getElementById('schedulePlace').value=x.place;document.getElementById('scheduleDetail').value=x.detail;document.getElementById('scheduleFormTitle').textContent='일정 수정';window.scrollTo({top:0,behavior:'smooth'});}
+function resetScheduleForm(){['scheduleId','scheduleTitle','scheduleTime','schedulePlace','scheduleDetail'].forEach(id=>document.getElementById(id).value='');document.getElementById('scheduleFormTitle').textContent='일정 등록';}
+function removeSchedule(id){if(!confirm('이 일정을 삭제할까요?'))return;google.script.run.withSuccessHandler(()=>{alert('일정을 삭제했습니다.');loadAdminSchedules();}).withFailureHandler(err).deleteSchedule(id);}
 
 /* =====================================
    회원용 페이지 함수
