@@ -208,10 +208,7 @@ th{color:#667085;background:#f8f9fc}
 
 <body>
 
-<!-- =========================
-     관리자 페이지
-========================= -->
-
+<!-- 관리자 로그인 -->
 <section id="loginBox" class="card" style="max-width:420px;margin:12vh auto;display:none">
   <h2>순천지역WM 관리자 로그인</h2>
   <input id="adminPassword" type="password" placeholder="공통 비밀번호" style="width:100%;margin:8px 0">
@@ -229,7 +226,7 @@ th{color:#667085;background:#f8f9fc}
     <button class="secondary" onclick="openDrawer()">☰ 설정</button>
   </header>
 
-  <!-- 관리자 1페이지: 대시보드 -->
+  <!-- 대시보드 -->
   <section id="dashboardPage" class="page active">
     <h2>대시보드</h2>
     <p class="muted" id="adminToday"></p>
@@ -291,7 +288,7 @@ th{color:#667085;background:#f8f9fc}
     </div>
   </section>
 
-  <!-- 관리자 2페이지: 회원 관리 -->
+  <!-- 회원 관리 -->
   <section id="membersPage" class="page">
     <h2>회원 관리</h2>
 
@@ -310,7 +307,7 @@ th{color:#667085;background:#f8f9fc}
     </div>
   </section>
 
-  <!-- 관리자 3페이지: 회원별 통계 -->
+  <!-- 회원별 통계 -->
   <section id="statsPage" class="page">
     <h2>회원별 참여 통계</h2>
     <p class="muted">
@@ -372,9 +369,24 @@ th{color:#667085;background:#f8f9fc}
 <script>
 const PAGE = 'admin';
 const API = 'https://script.google.com/macros/s/AKfycbx6HK7qLTZGvJVyguvH0qgsaJXEJhHFhX-axeo7ZJqdf9lztk8tl4xMm1YP1b2qGb7A/exec';
-let adminSession = localStorage.getItem('wm_session') || '';
 
-function apiCall(method, params={}) {
+/*
+ * 로그인 토큰을 저장하거나 재사용하지 않습니다.
+ * 페이지를 새로 열 때마다 반드시 로그인해야 합니다.
+ */
+let adminSession = '';
+
+try {
+  localStorage.removeItem('wm_session');
+} catch(e) {
+  console.warn('이전 로그인 정보 정리 불가',e);
+}
+
+/* =====================================
+   JSONP API 통신
+===================================== */
+
+function apiCall(method,params={}) {
   return new Promise((resolve,reject)=>{
     const cb='wmrestore'+Date.now()+Math.floor(Math.random()*10000);
     const script=document.createElement('script');
@@ -392,8 +404,12 @@ function apiCall(method, params={}) {
 
     window[cb]=r=>{
       cleanup();
-      if(r && r.ok) resolve(r.data);
-      else reject(new Error((r&&r.message)||'서버 요청 실패'));
+
+      if(r && r.ok){
+        resolve(r.data);
+      }else{
+        reject(new Error((r&&r.message)||'서버 요청 실패'));
+      }
     };
 
     script.onerror=()=>{
@@ -401,12 +417,17 @@ function apiCall(method, params={}) {
       reject(new Error('서버 연결 실패'));
     };
 
-    const q=new URLSearchParams({...params,session:adminSession});
+    const q=new URLSearchParams({
+      ...params,
+      session:adminSession
+    });
 
-    script.src=API+
+    script.src=
+      API+
       '?action=api&method='+
       encodeURIComponent(method)+
-      '&callback='+cb+'&'+q.toString();
+      '&callback='+cb+
+      '&'+q.toString();
 
     document.body.appendChild(script);
   });
@@ -425,46 +446,59 @@ const methodMap={
   updateMember:'updateMember',
   reissueToken:'reissueToken',
   getMemberStats:'stats',
+  getMemberPageSummary:'summary',
   setAttendance:'setAttendance'
 };
 
-const runBridge={
-  success:null,
-  failure:null
-};
+let bridgeSuccess=null;
+let bridgeFailure=null;
+let runProxy;
 
-const runProxy=new Proxy(runBridge,{
-  get(target,prop,receiver){
+runProxy=new Proxy({},{
+  get(_target,prop){
 
     if(prop==='withSuccessHandler'){
       return fn=>{
-        target.success=fn;
-        return receiver;
+        bridgeSuccess=fn;
+        return runProxy;
       };
     }
 
     if(prop==='withFailureHandler'){
       return fn=>{
-        target.failure=fn;
-        return receiver;
+        bridgeFailure=fn;
+        return runProxy;
       };
     }
 
-    if(prop in target){
-      return target[prop];
+    if(prop==='then'){
+      return undefined;
     }
 
     return (...args)=>{
       const method=methodMap[prop];
 
       if(!method){
-        throw new Error('지원하지 않는 API: '+String(prop));
+        const error=new Error(
+          '지원하지 않는 API: '+String(prop)
+        );
+
+        if(typeof bridgeFailure==='function'){
+          bridgeFailure(error);
+        }else{
+          console.error(error);
+        }
+
+        return runProxy;
       }
 
       let params={};
 
       if(prop==='getMemberCalendarData'){
-        params={year:args[0],month:args[1]};
+        params={
+          year:args[0],
+          month:args[1]
+        };
       }
       else if(prop==='getMorningAttendees'){
         params={date:args[0]};
@@ -491,21 +525,28 @@ const runProxy=new Proxy(runBridge,{
         };
       }
 
+      const success=bridgeSuccess;
+      const failure=bridgeFailure;
+
+      bridgeSuccess=null;
+      bridgeFailure=null;
+
       apiCall(method,params)
         .then(value=>{
-          if(typeof target.success==='function'){
-            target.success(value);
+          if(typeof success==='function'){
+            success(value);
           }
         })
         .catch(error=>{
-          if(typeof target.failure==='function'){
-            target.failure(error);
+          if(typeof failure==='function'){
+            failure(error);
           }else{
             console.error(error);
+            alert(error.message||String(error));
           }
         });
 
-      return receiver;
+      return runProxy;
     };
   }
 });
@@ -525,19 +566,29 @@ async function adminLogin(){
   const errBox=document.getElementById('loginError');
   const btn=document.getElementById('loginButton');
 
+  if(!pw){
+    errBox.textContent='비밀번호를 입력하세요.';
+    return;
+  }
+
   btn.disabled=true;
   errBox.textContent='로그인 확인 중...';
 
   try{
-    const result=await apiCall('login',{password:pw});
+    const result=await apiCall('login',{
+      password:pw
+    });
+
+    if(!result || !result.token){
+      throw new Error('로그인 토큰을 받지 못했습니다.');
+    }
 
     adminSession=result.token;
-    localStorage.setItem('wm_session',adminSession);
-
     startAdmin();
   }
   catch(e){
-    errBox.textContent=e.message;
+    adminSession='';
+    errBox.textContent=e.message||String(e);
   }
   finally{
     btn.disabled=false;
@@ -635,7 +686,8 @@ function showPage(id){
 function loadDashboard(){
   google.script.run
     .withSuccessHandler(d=>{
-      document.getElementById('adminToday').textContent=d.today;
+      document.getElementById('adminToday').textContent=
+        d.today;
 
       document.getElementById('adminTotal').textContent=
         d.totalMembers;
@@ -750,7 +802,6 @@ function renderAdminCalendar(data){
 
 function selectAdminDate(date){
   adminSelectedDate=date;
-
   loadAdminCalendar();
 
   document.getElementById('adminSelectedDateTitle').textContent=
@@ -839,7 +890,11 @@ function loadMembers(){
 
       document.getElementById('memberList').innerHTML=html;
     })
-    .withFailureHandler(err)
+    .withFailureHandler(e=>{
+      document.getElementById('memberList').textContent=
+        '회원 목록 조회 실패: '+(e.message||e);
+      err(e);
+    })
     .listMembers();
 }
 
@@ -870,7 +925,7 @@ function editMember(row,encodedName){
 function viewQR(row){
   google.script.run
     .withSuccessHandler(rows=>{
-      const m=rows.find(x=>x.row===row);
+      const m=rows.find(x=>Number(x.row)===Number(row));
       if(m)showQR(m);
     })
     .withFailureHandler(err)
@@ -972,7 +1027,7 @@ function saveManual(){
 }
 
 /* =====================================
-   회원용 페이지 관련 함수
+   회원용 페이지 함수
 ===================================== */
 
 let memberYear;
@@ -1104,14 +1159,17 @@ function selectMemberDate(date){
 }
 
 /* =====================================
-   관리자 페이지 시작
+   페이지 최초 실행
 ===================================== */
 
-if(adminSession){
-  startAdmin();
-}else{
-  document.getElementById('loginBox').style.display='block';
-}
+/*
+ * 이 페이지는 항상 로그인 화면으로 시작합니다.
+ * localStorage의 과거 토큰으로 관리자 화면에 진입하지 않습니다.
+ */
+adminSession='';
+
+document.getElementById('adminPage').style.display='none';
+document.getElementById('loginBox').style.display='block';
 </script>
 
 </body>
