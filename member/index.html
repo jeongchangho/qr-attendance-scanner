@@ -1,21 +1,64 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#1769e0"><link rel="manifest" href="./manifest.webmanifest"><title>순천지역WM(회원)</title><style>
-*{box-sizing:border-box}body{margin:0;background:#f3f6fb;color:#17243a;font-family:system-ui,sans-serif}header{background:#1769e0;color:white;padding:18px 20px;font-weight:800;font-size:20px}main{max-width:1000px;margin:auto;padding:16px}.card{background:white;border-radius:14px;padding:16px;margin:12px 0;box-shadow:0 2px 12px #12254a12}input,select,button{font:inherit;padding:11px;border:1px solid #ccd5e3;border-radius:9px;margin:4px}button{background:#1769e0;color:white;border:0;font-weight:700;cursor:pointer}.danger{background:#b42318}.muted{color:#68778c;font-size:13px}.hidden{display:none}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.row>*{flex:1;min-width:110px}table{border-collapse:collapse;width:100%;font-size:14px}td,th{padding:9px;border-bottom:1px solid #e5eaf1;text-align:left}th{background:#f4f7fb}.stat{font-size:25px;font-weight:800}#login{max-width:420px;margin:12vh auto}pre{white-space:pre-wrap;word-break:break-word}
-</style></head><body><header>순천지역WM(회원)</header><main>
-
-<div id="app" class="hidden"><div class="row"><div class="card"><div class="muted">활성 회원</div><div id="total" class="stat">-</div></div><div class="card"><div class="muted">오늘 아침 출석</div><div id="today" class="stat">-</div></div><div class="card"><div class="muted">이번 달 최다 출석</div><div id="top" class="stat">-</div></div></div>
-<div class="card"><h3>아침 출석 달력</h3><div class="row"><button onclick="shift(-1)">이전 달</button><strong id="month"></strong><button onclick="shift(1)">다음 달</button></div><div id="calendar"></div></div><div class="card"><h3>선택한 날짜 출석자</h3><div id="attendees">날짜를 선택하세요.</div></div></div></main><script>
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1769e0"><link rel="manifest" href="./manifest.webmanifest">
+<title>순천지역WM(회원)</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f6fb;color:#17243a;font-family:system-ui,sans-serif}
+header{background:#1769e0;color:white;padding:16px 18px;font-weight:800;font-size:20px}
+header small{display:block;font-size:12px;font-weight:500;margin-top:4px;opacity:.9}
+main{max-width:1000px;margin:auto;padding:14px}.tabs{display:flex;gap:8px;margin:12px 0}
+.tabs button{flex:1;background:#e4ebf7;color:#24446d}.tabs button.active{background:#1769e0;color:white}
+.page{display:none}.page.active{display:block}.card{background:white;border-radius:14px;padding:15px;margin:12px 0;box-shadow:0 2px 12px #12254a12}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.stat{background:#f7f9fc;border-radius:10px;padding:12px;min-width:0}
+.label{font-size:12px;color:#68778c}.value{font-size:22px;font-weight:800;margin-top:6px;overflow-wrap:anywhere}
+.row{display:flex;align-items:center;justify-content:space-between;gap:8px}.calendar-nav button{flex:0 0 auto;min-width:72px;padding:9px 8px;font-size:13px;white-space:nowrap}
+.calendar-nav strong{flex:1;min-width:0;text-align:center;white-space:nowrap}
+button{font:inherit;border:0;border-radius:9px;padding:10px 12px;background:#1769e0;color:white;font-weight:700}
+.calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.weekday{text-align:center;color:#68778c;font-size:12px;padding:7px 0}
+.day{min-width:0;min-height:56px;border:1px solid #e5eaf1;background:white;color:#17243a;border-radius:9px;padding:5px 2px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.day.has{background:#eaf2ff;border-color:#b7cdf5}.day.selected{outline:2px solid #1769e0}.day .count{font-size:10px;color:#1769e0}
+.bar-row{display:grid;grid-template-columns:42px minmax(60px,1fr) 44px;gap:8px;align-items:center;margin:12px 0;font-size:13px}
+.track{height:13px;background:#edf0f5;border-radius:99px;overflow:hidden}.bar{height:100%;border-radius:99px}
+.schedule-item{padding:12px;background:#f7f9fc;border-radius:10px;margin:8px 0}.muted{color:#68778c;font-size:12px}
+@media(max-width:520px){main{padding:10px}.grid{gap:5px}.stat{padding:9px}.label{font-size:11px}.value{font-size:19px}.bar-row{grid-template-columns:38px minmax(50px,1fr) 38px;gap:6px}}
+</style></head><body>
+<header>순천지역WM<small>하나님과 동행하는 순천지역WM</small></header>
+<main>
+<div class="tabs"><button id="tabAttendance" class="active" onclick="showTab('attendance')">출석 현황</button><button id="tabSchedule" onclick="showTab('schedule')">일정 안내</button></div>
+<section id="attendancePage" class="page active">
+<div class="grid">
+<div class="stat"><div class="label">전체 회원</div><div id="total" class="value">-</div></div>
+<div class="stat"><div class="label">오늘 아침기도모임 참여</div><div id="today" class="value">-</div></div>
+<div class="stat"><div class="label">이번 달 아침기도모임 최다 참여자</div><div id="top" class="value">-</div></div>
+</div>
+<div class="card"><h3>이번 달 아침기도모임 참여 TOP 5</h3><div id="ranking"><span class="muted">불러오는 중...</span></div></div>
+<div class="card"><h3>아침기도모임 출석 달력</h3><div class="row calendar-nav"><button onclick="shiftAttendance(-1)">이전 달</button><strong id="month"></strong><button onclick="shiftAttendance(1)">다음 달</button></div><div id="calendar" class="calendar"></div></div>
+<div class="card"><h3 id="attendeeTitle">선택한 날짜 출석자</h3><div id="attendees" class="muted">날짜를 선택하세요.</div></div>
+</section>
+<section id="schedulePage" class="page">
+<div class="card"><h3 id="scheduleMonthHeading">이번 달 일정</h3><div id="monthScheduleList"></div></div>
+<div class="card"><h3>월별 일정 달력</h3><div class="row calendar-nav"><button onclick="shiftSchedule(-1)">이전 달</button><strong id="scheduleMonth"></strong><button onclick="shiftSchedule(1)">다음 달</button></div><div id="scheduleCalendar" class="calendar"></div><div class="schedule-item" id="selectedSchedule"><span class="muted">날짜를 선택하면 해당 날짜의 일정이 표시됩니다.</span></div></div>
+</section>
+</main>
+<script>
 const API="https://script.google.com/macros/s/AKfycbx6HK7qLTZGvJVyguvH0qgsaJXEJhHFhX-axeo7ZJqdf9lztk8tl4xMm1YP1b2qGb7A/exec";
-function call(method,params={}){return new Promise((resolve,reject)=>{const cb="wmcb"+Date.now()+Math.floor(Math.random()*9999),s=document.createElement("script");let timer=setTimeout(()=>{clean();reject(Error("서버 응답 시간 초과"))},20000);function clean(){clearTimeout(timer);delete window[cb];s.remove()}window[cb]=r=>{clean();if(r.ok)resolve(r.data);else reject(Error(r.message||"요청 실패"))};s.onerror=()=>{clean();reject(Error("서버 연결 실패"))};s.src=API+"?action=api&method="+encodeURIComponent(method)+"&callback="+cb+"&"+new URLSearchParams(params);document.body.appendChild(s)})}
-async function login(){try{const r=await call("login",{password:document.querySelector("#pw").value});session=r.token;localStorage.setItem("wm_session",session);show()}catch(e){document.querySelector("#err").textContent=e.message}}
-function show(){document.querySelector("#login").classList.add("hidden");document.querySelector("#app").classList.remove("hidden");init()}
-function req(m,p={}){return call(m,p)}
-function logout(){localStorage.removeItem("wm_session");location.reload()}
-function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-document.querySelector("#app").classList.remove("hidden");init();if("serviceWorker"in navigator)navigator.serviceWorker.register("./sw.js");
-
-let yy=new Date().getFullYear(),mm=new Date().getMonth()+1;
-async function init(){try{const s=await req("summary");total.textContent=s.totalMembers;today.textContent=s.todayCount+"명";top.textContent=s.topName+" ("+s.topCount+"회)";await draw()}catch(e){alert(e.message)}}
-async function draw(){const d=await req("calendar",{year:yy,month:mm});month.textContent=yy+"년 "+mm+"월";const first=new Date(yy,mm-1,1).getDay(),last=new Date(yy,mm,0).getDate();let h="<table><tr>"+["일","월","화","수","목","금","토"].map(x=>"<th>"+x+"</th>").join("")+"</tr>";let day=1;for(let w=0;w<6&&day<=last;w++){h+="<tr>";for(let k=0;k<7;k++){if((w===0&&k<first)||day>last)h+="<td></td>";else{const ds=yy+"-"+String(mm).padStart(2,"0")+"-"+String(day).padStart(2,"0"),a=d.attendance[ds];h+=`<td onclick="pick('${ds}')" style="cursor:pointer"><b>${day}</b><br><small>${a?("출석 "+a.count):""}</small></td>`;day++}}h+="</tr>"}calendar.innerHTML=h+"</table>"}
-function shift(n){mm+=n;if(mm<1){mm=12;yy--}if(mm>12){mm=1;yy++}draw()}
-async function pick(ds){try{const a=await req("attendees",{date:ds});attendees.textContent=a.length?a.join(", "):"출석자가 없습니다."}catch(e){attendees.textContent=e.message}}
+function call(method,params={}){return new Promise((resolve,reject)=>{const cb="wmcb"+Date.now()+Math.floor(Math.random()*9999),s=document.createElement("script");let timer=setTimeout(()=>{clean();reject(Error("서버 응답 시간 초과"))},20000);function clean(){clearTimeout(timer);delete window[cb];s.remove()}window[cb]=r=>{clean();if(r&&r.ok)resolve(r.data);else reject(Error(r&&r.message||"요청 실패"))};s.onerror=()=>{clean();reject(Error("서버 연결 실패"))};s.src=API+"?action=api&method="+encodeURIComponent(method)+"&callback="+cb+"&"+new URLSearchParams(params);document.body.appendChild(s)})}
+const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let yy=new Date().getFullYear(),mm=new Date().getMonth()+1,selectedDate='';
+let sy=yy,sm=mm,scheduleSelected='';
+function showTab(which){$('attendancePage').classList.toggle('active',which==='attendance');$('schedulePage').classList.toggle('active',which==='schedule');$('tabAttendance').classList.toggle('active',which==='attendance');$('tabSchedule').classList.toggle('active',which==='schedule');if(which==='schedule')loadSchedules()}
+async function init(){try{const s=await call('summary');$('total').textContent=s.totalMembers+'명';$('today').textContent=s.todayCount+'명';$('top').textContent=s.topName+(s.topCount?' ('+s.topCount+'회)':'');renderRanking(s.ranking||[]);await drawAttendance()}catch(e){$('ranking').textContent=e.message;}}
+function renderRanking(rows){if(!rows.length){$('ranking').innerHTML='<p class="muted">이번 달 참여 기록이 없습니다.</p>';return}
+const colors={1:'#e53935',2:'#fb8c00',3:'#fdd835'};const max=Math.max(1,...rows.map(x=>x.count));
+$('ranking').innerHTML=rows.map(x=>{const color=colors[x.rank]||'#9e9e9e';return `<div class="bar-row"><b>${x.rank}위</b><div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>${esc(x.name)}</span></div><div class="track"><div class="bar" style="width:${x.count/max*100}%;background:${color}"></div></div></div><b>${x.count}회</b></div>`}).join('')}
+async function drawAttendance(){const d=await call('calendar',{year:yy,month:mm});$('month').textContent=yy+'년 '+mm+'월';renderCalendar($('calendar'),d,selectedDate,'selectAttendance')}
+function renderCalendar(el,d,selected,handler){const first=new Date(d.year,d.month-1,1).getDay(),last=new Date(d.year,d.month,0).getDate();let h=['일','월','화','수','목','금','토'].map(x=>`<div class="weekday">${x}</div>`).join('');for(let i=0;i<first;i++)h+='<div></div>';for(let day=1;day<=last;day++){const ds=d.year+'-'+String(d.month).padStart(2,'0')+'-'+String(day).padStart(2,'0');const a=d.attendance&&d.attendance[ds];h+=`<button class="day ${a?'has':''} ${selected===ds?'selected':''}" onclick="${handler}('${ds}')"><span>${day}</span>${a?`<span class="count">${a.count}명</span>`:''}</button>`}el.innerHTML=h}
+function shiftAttendance(n){mm+=n;if(mm<1){mm=12;yy--}if(mm>12){mm=1;yy++}drawAttendance()}
+async function selectAttendance(ds){selectedDate=ds;await drawAttendance();$('attendeeTitle').textContent=ds+' 아침기도모임 출석자';try{const a=await call('attendees',{date:ds});$('attendees').textContent=a.length?a.join(', '):'출석자가 없습니다.'}catch(e){$('attendees').textContent=e.message}}
+function shiftSchedule(n){sm+=n;if(sm<1){sm=12;sy--}if(sm>12){sm=1;sy++}scheduleSelected='';loadSchedules()}
+async function loadSchedules(){try{const rows=await call('schedules',{year:sy,month:sm});$('scheduleMonthHeading').textContent=sy+'년 '+sm+'월 일정';$('scheduleMonth').textContent=sy+'년 '+sm+'월';$('monthScheduleList').innerHTML=rows.length?rows.map(x=>`<div class="schedule-item"><b>${esc(x.date)} · ${esc(x.title)}</b><div>${esc(x.time)} ${esc(x.place)}</div><div>${esc(x.detail)}</div></div>`).join(''):'<p class="muted">이번 달 등록된 일정이 없습니다.</p>';const byDate={};rows.forEach(x=>(byDate[x.date]||(byDate[x.date]=[])).push(x));const days={};Object.keys(byDate).forEach(k=>days[k]={count:byDate[k].length});renderCalendar($('scheduleCalendar'),{year:sy,month:sm,attendance:days},scheduleSelected,'selectScheduleDate');window.scheduleRows=rows;if(scheduleSelected)renderSelectedSchedule(scheduleSelected)}catch(e){$('monthScheduleList').textContent=e.message}}
+function selectScheduleDate(ds){scheduleSelected=ds;renderCalendar($('scheduleCalendar'),{year:sy,month:sm,attendance:(()=>{const o={};(window.scheduleRows||[]).forEach(x=>(o[x.date]||(o[x.date]={count:0})).count++);return o})()},scheduleSelected,'selectScheduleDate');renderSelectedSchedule(ds)}
+function renderSelectedSchedule(ds){const rows=(window.scheduleRows||[]).filter(x=>x.date===ds);$('selectedSchedule').innerHTML='<b>'+esc(ds)+'</b><br>'+(rows.length?rows.map(x=>`<div class="schedule-item"><b>${esc(x.title)}</b><div>${esc(x.time)} ${esc(x.place)}</div><div>${esc(x.detail)}</div></div>`).join(''):'<p class="muted">이 날짜에는 등록된 일정이 없습니다.</p>')}
+if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
+init();
 </script></body></html>
