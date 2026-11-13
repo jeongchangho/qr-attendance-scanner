@@ -110,44 +110,57 @@
       position: fixed;
     }
 
-    /* 화면 아래쪽의 Apps Script 주소 접기/펼치기 */
+    /* 카메라 종료 버튼 바로 아래의 Apps Script 주소 접기/펼치기 */
     .endpoint-drawer {
       position: static;
       display: flex;
       flex-direction: column;
       align-items: center;
       width: 100%;
-      padding: 8px 0 0;
+      padding: 5px 0 0;
       pointer-events: auto;
     }
 
     .endpoint-toggle {
-      pointer-events: auto;
       width: 42px;
       min-height: 28px;
       padding: 2px 8px;
       margin: 0;
-      border-radius: 14px 14px 8px 8px;
+      border-radius: 14px;
       background: #334155;
       color: #e2e8f0;
-      font-size: 18px;
+      font-size: 19px;
       line-height: 1;
       box-shadow: 0 2px 10px rgba(0,0,0,.25);
     }
 
     .endpoint-panel {
-      pointer-events: auto;
-      width: min(100%, 620px);
-      margin-top: 6px;
-      padding: 12px;
-      border: 1px solid #475569;
+      width: 100%;
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(-8px);
+      margin-top: 0;
+      padding: 0 12px;
+      border: 1px solid transparent;
       border-radius: 12px;
       background: #1e293b;
-      box-shadow: 0 4px 18px rgba(0,0,0,.35);
+      box-shadow: 0 4px 18px rgba(0,0,0,.25);
+      transition:
+        max-height .32s ease,
+        opacity .25s ease,
+        transform .32s ease,
+        margin-top .32s ease,
+        padding .32s ease;
     }
 
-    .endpoint-panel[hidden] {
-      display: none;
+    .endpoint-panel.open {
+      max-height: 130px;
+      opacity: 1;
+      transform: translateY(0);
+      margin-top: 7px;
+      padding: 12px;
+      border-color: #475569;
     }
 
     .endpoint-panel label {
@@ -162,6 +175,64 @@
       margin: 0;
       padding: 10px;
       font-size: .85rem;
+    }
+
+    /* 전체화면에서는 세로 공간을 화면에 맞춰 사용 */
+    html, body {
+      min-height: 100%;
+    }
+
+    body:fullscreen {
+      width: 100%;
+      height: 100%;
+      min-height: 100%;
+      overflow: auto;
+    }
+
+    body:fullscreen main {
+      width: 100%;
+      max-width: none;
+      min-height: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: max(12px, env(safe-area-inset-top)) 14px max(12px, env(safe-area-inset-bottom));
+    }
+
+    body:fullscreen main > h1 {
+      flex: 0 0 auto;
+      margin: 8px 0 12px;
+    }
+
+    body:fullscreen .panel {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      margin: 0;
+    }
+
+    body:fullscreen .camera-wrap {
+      flex: 1 1 auto;
+      min-height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    body:fullscreen video {
+      width: 100%;
+      height: 100%;
+      aspect-ratio: auto;
+      object-fit: contain;
+    }
+
+    body:fullscreen .status {
+      flex: 0 0 auto;
+    }
+
+    body:fullscreen .endpoint-panel.open {
+      max-height: 130px;
     }
 
     /* 카메라 영역 */
@@ -344,7 +415,7 @@
     <!-- 4. 카메라 종료 버튼 -->
     <button id="stop" class="stop" disabled>
       카메라 종료
-    </button>\n\n<!-- Apps Script 주소는 기본적으로 숨기고, 아래 화살표로 열 수 있습니다. -->
+    </button><!-- Apps Script 주소는 기본적으로 숨기고, 아래 화살표로 열 수 있습니다. -->
 <div class="endpoint-drawer">
   <button
     id="endpointToggle"
@@ -355,7 +426,7 @@
     aria-controls="endpointPanel"
   >⌃</button>
 
-  <div id="endpointPanel" class="endpoint-panel" hidden>
+  <div id="endpointPanel" class="endpoint-panel">
     <label for="endpoint">Apps Script 웹앱 URL</label>
     <input
       id="endpoint"
@@ -384,7 +455,7 @@ const fullscreenToggle = document.querySelector('#fullscreenToggle');
 
 function updateFullscreenButton() {
   const active = Boolean(document.fullscreenElement);
-  fullscreenToggle.textContent = active ? '⤢' : '⛶';
+  fullscreenToggle.textContent = active ? '×' : '⛶';
   fullscreenToggle.setAttribute(
     'aria-label',
     active ? '전체화면 종료' : '전체화면 시작'
@@ -395,7 +466,7 @@ function updateFullscreenButton() {
 fullscreenToggle.addEventListener('click', async () => {
   try {
     if (!document.fullscreenElement) {
-      const target = document.documentElement;
+      const target = document.body;
       if (target.requestFullscreen) {
         await target.requestFullscreen();
       } else {
@@ -422,10 +493,12 @@ updateFullscreenButton();
 const endpointToggle = document.querySelector('#endpointToggle');
 const endpointPanel = document.querySelector('#endpointPanel');
 
+endpointToggle.textContent = '⌄';
+
 endpointToggle.onclick = () => {
-  const willOpen = endpointPanel.hidden;
-  endpointPanel.hidden = !willOpen;
-  endpointToggle.textContent = willOpen ? '⌄' : '⌃';
+  const willOpen = !endpointPanel.classList.contains('open');
+  endpointPanel.classList.toggle('open', willOpen);
+  endpointToggle.textContent = willOpen ? '⌃' : '⌄';
   endpointToggle.setAttribute('aria-expanded', String(willOpen));
   endpointToggle.setAttribute(
     'aria-label',
