@@ -1,5 +1,5 @@
 
-const C = 'admin-pwa-v5';
+const C = 'admin-pwa-v6';
 
 self.addEventListener('install', event => {
   event.waitUntil(
