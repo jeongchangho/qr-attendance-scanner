@@ -36,7 +36,7 @@ body{
   font-family:system-ui,-apple-system,sans-serif;
   max-width:1100px;
   margin:0 auto;
-  padding:20px 15px 50px;
+  padding:20px 15px calc(92px + env(safe-area-inset-bottom));
   background:var(--bg);
   color:var(--text);
 }
@@ -160,6 +160,21 @@ th{color:#667085;background:#f8f9fc}
 .drawer .nav-item{display:flex;align-items:center;gap:12px;min-height:52px;padding:12px 14px;border-radius:12px;font-size:15px;font-weight:700;background:#f2f4f8;color:#263247;border:1px solid #e7eaf0}
 .drawer .nav-item .nav-icon{width:25px;display:inline-flex;justify-content:center;font-size:20px}
 .drawer .nav-item.active{background:#e8edff;color:#315cdb;border-color:#cbd7ff}
+.bottom-nav{position:fixed;z-index:20;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(4,1fr);padding:7px 8px calc(7px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--line);box-shadow:0 -4px 18px #15244712}
+.bottom-nav button{background:transparent;color:#667085;border-radius:12px;padding:8px 2px;min-height:54px;font-size:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+.bottom-nav button.active{color:var(--primary);background:#eef2ff}
+.bottom-nav .nav-icon{font-size:18px;line-height:1}
+.personal-search{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin:12px 0}
+.personal-results{font-size:13px;color:var(--muted);line-height:1.7;min-height:22px}
+.personal-dates{color:var(--primary);font-weight:650}
+.day.person-has{background:#fff;border-color:var(--line)}
+.day.person-has .count{font-size:0}
+.day.person-has .count:after{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--primary)}
+.exit-backdrop{position:fixed;inset:0;z-index:1000;background:#10182899;display:none;align-items:center;justify-content:center;padding:20px}
+.exit-dialog{background:#fff;border-radius:18px;padding:22px;width:min(340px,100%);box-shadow:0 15px 40px #0003}
+.exit-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}
+.edit-member-dialog label{display:block;font-size:13px;font-weight:650;margin:12px 0 5px}
+.edit-member-dialog input,.edit-member-dialog select{width:100%}
 .gender-section{margin:14px 0 20px;padding:16px;border:1px solid var(--line);border-radius:14px;background:#fff}
 .gender-title{font-size:17px;font-weight:800;margin:0 0 12px}
 .gender-person{display:grid;grid-template-columns:76px minmax(70px,1fr) 52px;gap:9px;align-items:center;margin:10px 0;font-size:13px}
@@ -229,7 +244,7 @@ th{color:#667085;background:#f8f9fc}
   font-size:13px;
 }
 @media(max-width:650px){
-  body{padding:15px 11px 40px}
+  body{padding:15px 11px calc(92px + env(safe-area-inset-bottom))}
   .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
   .stat{padding:14px}
   .stat .value{font-size:22px}
@@ -254,14 +269,10 @@ th{color:#667085;background:#f8f9fc}
       <h1>QR 출석관리</h1>
       <div class="subtitle">순천지역 WM 관리자</div>
     </div>
-    <button class="secondary" onclick="openDrawer()">☰ 설정</button>
   </header>
 
   <!-- 대시보드 -->
   <section id="dashboardPage" class="page active">
-    <h2>홈</h2>
-    <p class="muted" id="adminToday"></p>
-
     <div class="grid">
       <div class="stat">
         <div class="label">전체 활성 회원</div>
@@ -296,6 +307,11 @@ th{color:#667085;background:#f8f9fc}
         <strong id="adminCalendarTitle"></strong>
         <button class="secondary" onclick="changeAdminMonth(1)">다음</button>
       </div>
+      <div class="personal-search">
+        <input id="personalNameSearch" type="search" placeholder="이름으로 개인 출석 검색">
+        <button class="secondary" onclick="searchPersonalAttendance()">조회</button>
+      </div>
+      <div id="personalAttendanceResults" class="personal-results" aria-live="polite"></div>
 
       <div class="calendar" id="adminCalendar"></div>
     </div>
@@ -327,6 +343,7 @@ th{color:#667085;background:#f8f9fc}
       <h3>회원 등록 및 QR 발급</h3>
       <div class="form-row">
         <input id="newName" placeholder="회원 이름">
+        <select id="newGroup"><option value="">그룹 선택</option><option value="남청년">남청년</option><option value="여청년">여청년</option></select>
         <button onclick="addMemberUI()">등록 및 QR 발급</button>
       </div>
       <div id="qrResult"></div>
@@ -434,6 +451,26 @@ th{color:#667085;background:#f8f9fc}
     onclick="showPage('schedulesPage')"><span class="nav-icon">▦</span><span>일정 관리</span></button>
 </div>
 
+<nav class="bottom-nav" aria-label="관리자 메뉴">
+  <button id="bottomDashboard" class="active" onclick="showPage('dashboardPage')"><span class="nav-icon">⌂</span><span>홈</span></button>
+  <button id="bottomMembers" onclick="showPage('membersPage')"><span class="nav-icon">♙</span><span>회원관리</span></button>
+  <button id="bottomStats" onclick="showPage('statsPage')"><span class="nav-icon">☷</span><span>통계</span></button>
+  <button id="bottomSchedules" onclick="showPage('schedulesPage')"><span class="nav-icon">▦</span><span>일정 관리</span></button>
+</nav>
+
+<div id="exitBackdrop" class="exit-backdrop" role="dialog" aria-modal="true" aria-labelledby="exitTitle">
+  <div class="exit-dialog"><h3 id="exitTitle">앱을 종료할까요?</h3><p class="muted">화면을 나가시겠습니까?</p><div class="exit-actions"><button class="secondary" onclick="cancelExit()">아니오</button><button onclick="confirmExit()">예</button></div></div>
+</div>
+<div id="editMemberBackdrop" class="exit-backdrop" role="dialog" aria-modal="true" aria-labelledby="editMemberTitle">
+  <div class="exit-dialog edit-member-dialog">
+    <h3 id="editMemberTitle">회원 정보 수정</h3>
+    <input type="hidden" id="editMemberRow">
+    <label for="editMemberName">이름</label><input id="editMemberName">
+    <label for="editMemberGroup">그룹</label><select id="editMemberGroup"><option value="남청년">남청년</option><option value="여청년">여청년</option></select>
+    <label for="editMemberStatus">상태</label><select id="editMemberStatus"><option value="활성">활성</option><option value="비활성">비활성</option></select>
+    <div class="exit-actions"><button class="secondary" onclick="closeEditMember()">취소</button><button onclick="saveMemberEdit()">저장</button></div>
+  </div>
+</div>
 <script>
 const PAGE = 'admin';
 const API = 'https://script.google.com/macros/s/AKfycbx6HK7qLTZGvJVyguvH0qgsaJXEJhHFhX-axeo7ZJqdf9lztk8tl4xMm1YP1b2qGb7A/exec';
@@ -508,6 +545,7 @@ const methodMap={
   setAttendance:'setAttendance'
 };
 
+let activeAdminPage='dashboardPage';
 let bridgeSuccess=null;
 let bridgeFailure=null;
 let runProxy;
@@ -562,13 +600,14 @@ runProxy=new Proxy({},{
         params={date:args[0]};
       }
       else if(prop==='addMember'){
-        params={name:args[0]};
+        params={name:args[0],group:args[1]};
       }
       else if(prop==='updateMember'){
         params={
           row:args[0],
           name:args[1],
-          status:args[2]
+          status:args[2],
+          group:args[3]
         };
       }
       else if(prop==='reissueToken'){
@@ -672,6 +711,7 @@ function closeDrawer(){
 }
 
 function showPage(id){
+  activeAdminPage=id;
   document.querySelectorAll('#adminPage .page').forEach(p=>{
     p.classList.remove('active');
   });
@@ -690,6 +730,14 @@ function showPage(id){
   };
 
   document.getElementById(nav[id]).classList.add('active');
+  const bottomNav={
+    dashboardPage:'bottomDashboard',
+    membersPage:'bottomMembers',
+    statsPage:'bottomStats',
+    schedulesPage:'bottomSchedules'
+  };
+  document.querySelectorAll('.bottom-nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById(bottomNav[id]).classList.add('active');
 
   closeDrawer();
 
@@ -713,12 +761,23 @@ function showPage(id){
    관리자 대시보드
 ===================================== */
 
+window.addEventListener('popstate',()=>{
+  document.getElementById('exitBackdrop').style.display='flex';
+  history.pushState({wmExitGuard:true},'',location.href);
+});
+history.pushState({wmExitGuard:true},'',location.href);
+function cancelExit(){document.getElementById('exitBackdrop').style.display='none';}
+function confirmExit(){document.getElementById('exitBackdrop').style.display='none';history.go(-2);}
+window.setInterval(()=>{
+  if(activeAdminPage==='dashboardPage'){loadDashboard();loadAdminCalendar();}
+  if(activeAdminPage==='membersPage')loadMembers();
+  if(activeAdminPage==='statsPage'){loadStats();loadManualMembers();}
+  if(activeAdminPage==='schedulesPage')loadAdminSchedules();
+},60000);
+
 function loadDashboard(){
   google.script.run
     .withSuccessHandler(d=>{
-      document.getElementById('adminToday').textContent=
-        d.today;
-
       document.getElementById('adminTotal').textContent=
         d.totalMembers;
 
@@ -782,6 +841,7 @@ function loadAdminCalendar(){
 }
 
 function renderAdminCalendar(data){
+  window.adminCalendarData=data;
   document.getElementById('adminCalendarTitle').textContent=
     data.year+'년 '+data.month+'월';
 
@@ -810,10 +870,12 @@ function renderAdminCalendar(data){
 
     const info=data.attendance[date];
     const count=info?info.count:0;
+    const searching=!!document.getElementById('personalNameSearch').value.trim();
+    const personMatch=isPersonalMatch(info);
 
     const classes=[
       'day',
-      count?'has':'',
+      searching?(personMatch?'person-has':''):(count?'has':''),
       adminSelectedDate===date?'selected':''
     ].filter(Boolean).join(' ');
 
@@ -821,13 +883,29 @@ function renderAdminCalendar(data){
       '<button class="'+classes+'" '+
       'onclick="selectAdminDate(\''+date+'\')">'+
         '<span class="num">'+day+'</span>'+
-        (count
-          ?'<span class="count">'+count+'명</span>'
-          :'')+
+        (searching?(personMatch?'<span class="count">•</span>':''):(count?'<span class="count">'+count+'명</span>':''))+
       '</button>';
   }
 
   document.getElementById('adminCalendar').innerHTML=html;
+}
+
+function isPersonalMatch(info){
+  const query=(document.getElementById('personalNameSearch').value||'').trim();
+  return !!query && !!info && (info.names||[]).some(name=>name.includes(query));
+}
+
+function searchPersonalAttendance(){
+  const query=document.getElementById('personalNameSearch').value.trim();
+  const data=window.adminCalendarData;
+  const box=document.getElementById('personalAttendanceResults');
+  if(!query){box.textContent='이름을 입력해 개인 출석 기록을 조회하세요.';if(data)renderAdminCalendar(data);return;}
+  if(!data){box.textContent='달력 정보를 불러오는 중입니다.';return;}
+  const dates=Object.keys(data.attendance||{}).filter(date=>(data.attendance[date].names||[]).some(name=>name.includes(query))).sort();
+  box.innerHTML=dates.length
+    ?'<b>'+esc(query)+'</b> · 총 <b>'+dates.length+'회</b><br><span class="personal-dates">'+dates.map(esc).join(' · ')+'</span>'
+    :'<b>'+esc(query)+'</b>의 이번 달 아침기도모임 출석 기록이 없습니다.';
+  renderAdminCalendar(data);
 }
 
 function selectAdminDate(date){
@@ -859,20 +937,23 @@ function selectAdminDate(date){
 
 function addMemberUI(){
   const name=document.getElementById('newName').value.trim();
+  const group=document.getElementById('newGroup').value;
 
   if(!name){
     alert('회원 이름을 입력하세요.');
     return;
   }
+  if(!group){alert('그룹을 선택하세요.');return;}
 
   google.script.run
     .withSuccessHandler(r=>{
       showQR(r);
       document.getElementById('newName').value='';
+      document.getElementById('newGroup').value='';
       loadMembers();
     })
     .withFailureHandler(err)
-    .addMember(name);
+    .addMember(name,group);
 }
 
 function showQR(r){
@@ -895,30 +976,17 @@ function showQR(r){
 function loadMembers(){
   google.script.run
     .withSuccessHandler(rows=>{
-      let html=
-        '<div class="table-wrap"><table>'+
-        '<tr><th>이름</th><th>상태</th><th>관리</th></tr>';
-
-      rows.forEach(m=>{
-        html+=
-          '<tr>'+
-            '<td>'+esc(m.name)+'</td>'+
-            '<td>'+esc(m.status)+'</td>'+
-            '<td><div class="actions">'+
-              '<button class="secondary" onclick="editMember('+
-                m.row+','+
-                "'"+encodeURIComponent(m.name)+"'"+
-              ')">수정</button>'+
-              '<button onclick="viewQR('+m.row+')">QR 보기</button>'+
-              '<button class="gray" onclick="reissueQR('+
-                m.row+')">QR 재발급</button>'+
-            '</div></td>'+
-          '</tr>';
+      const groups=['남청년','여청년'];
+      let html='';
+      groups.forEach(group=>{
+        const people=rows.filter(m=>(m.group||'미분류')===group).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+        html+='<details class="gender-section" open><summary class="gender-title">'+group+' ('+people.length+'명)</summary><div class="table-wrap"><table><tr><th>이름</th><th>상태</th><th>관리</th></tr>';
+        people.forEach(m=>{html+='<tr><td>'+esc(m.name)+'</td><td>'+esc(m.status)+'</td><td><div class="actions"><button class="secondary" onclick="openEditMember('+m.row+',\''+encodeURIComponent(m.name)+'\',\''+(m.group||group)+'\',\''+(m.status==='비활성'?'비활성':'활성')+'\')">수정</button><button onclick="viewQR('+m.row+')">QR 보기</button><button class="gray" onclick="reissueQR('+m.row+')">QR 재발급</button></div></td></tr>';});
+        html+='</table></div></details>';
       });
-
-      html+='</table></div>';
-
-      document.getElementById('memberList').innerHTML=html;
+      const other=rows.filter(m=>!groups.includes(m.group||''));
+      if(other.length){html+='<details class="gender-section"><summary class="gender-title">기타 ('+other.length+'명)</summary><div class="table-wrap"><table><tr><th>이름</th><th>그룹</th><th>상태</th><th>관리</th></tr>'+other.sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(m=>'<tr><td>'+esc(m.name)+'</td><td>'+esc(m.group||'미분류')+'</td><td>'+esc(m.status)+'</td><td><button class="secondary" onclick="openEditMember('+m.row+',\''+encodeURIComponent(m.name)+'\',\''+(m.group||'남청년')+'\',\''+(m.status==='비활성'?'비활성':'활성')+'\')">수정</button> <button onclick="viewQR('+m.row+')">QR 보기</button> <button class="gray" onclick="reissueQR('+m.row+')">QR 재발급</button></td></tr>').join('')+'</table></div></details>';}
+      document.getElementById('memberList').innerHTML=html||'<p class="muted">등록된 회원이 없습니다.</p>';
     })
     .withFailureHandler(e=>{
       document.getElementById('memberList').textContent=
@@ -928,28 +996,29 @@ function loadMembers(){
     .listMembers();
 }
 
-function editMember(row,encodedName){
+function openEditMember(row,encodedName,group,status){
   const name=decodeURIComponent(encodedName);
-  const newName=prompt('회원 이름 수정',name);
-
-  if(newName===null)return;
-
-  if(!newName.trim()){
-    alert('이름을 입력하세요.');
-    return;
-  }
-
-  const active=confirm(
-    '확인: 활성 회원\n취소: 비활성 회원'
-  );
-
+  document.getElementById('editMemberRow').value=row;
+  document.getElementById('editMemberName').value=name;
+  document.getElementById('editMemberGroup').value=['남청년','여청년'].includes(group)?group:'남청년';
+  document.getElementById('editMemberStatus').value=status==='비활성'?'비활성':'활성';
+  document.getElementById('editMemberBackdrop').style.display='flex';
+}
+function closeEditMember(){document.getElementById('editMemberBackdrop').style.display='none';}
+function saveMemberEdit(){
+  const row=Number(document.getElementById('editMemberRow').value);
+  const name=document.getElementById('editMemberName').value.trim();
+  const group=document.getElementById('editMemberGroup').value;
+  const status=document.getElementById('editMemberStatus').value;
+  if(!name){alert('이름을 입력하세요.');return;}
   google.script.run
     .withSuccessHandler(()=>{
+      closeEditMember();
       loadMembers();
       loadStats();
     })
     .withFailureHandler(err)
-    .updateMember(row,newName,active?'활성':'비활성');
+    .updateMember(row,name,status,group);
 }
 
 function viewQR(row){
@@ -985,22 +1054,25 @@ function loadStats(){
   const femaleNames=['고예빈','배현지','서어진','김민채','이민주','김수민','서한결','최승리','박지예','이하늘','홍세연','최은서','조예림','김국향','조유리','오수현','전유민','윤수빈','전하란'];
   const sortKo=(a,b)=>a.name.localeCompare(b.name,'ko');
   const renderGroup=(title,names,rows,kind)=>{
-    const byName=new Map(rows.map(m=>[m.name,m]));
-    const people=names.map(name=>byName.get(name)||{name,status:'미등록',morning:0,evening:0}).sort(sortKo);
+    const registered=rows.filter(m=>(m.group||'')===title);
+    const registeredNames=new Set(rows.map(m=>m.name));
+    const legacy=names.filter(name=>!registeredNames.has(name)).map(name=>({name,morning:0,evening:0}));
+    const people=registered.concat(legacy).sort(sortKo);
     const max=Math.max(1,...people.flatMap(m=>[Number(m.morning)||0,Number(m.evening)||0]));
-    let html='<section class="gender-section"><h3 class="gender-title">'+title+' ('+people.length+'명)</h3>'+
+    let html='<details class="gender-section" open><summary class="gender-title">'+title+' ('+people.length+'명)</summary>'+
       '<div class="gender-legend"><span><i class="gender-dot"></i>아침기도모임</span><span><i class="gender-dot evening"></i>수요일 저녁모임</span></div>';
     people.forEach(m=>{
       const morning=Number(m.morning)||0, evening=Number(m.evening)||0;
-      html+='<div class="gender-person"><div><b>'+esc(m.name)+'</b><div class="muted">'+esc(m.status||'')+'</div></div><div class="gender-bars"><div><div class="gender-track"><div class="gender-fill" style="width:'+(morning/max*100)+'%"></div></div><div class="muted">'+morning+'회</div></div><div><div class="gender-track"><div class="gender-fill evening" style="width:'+(evening/max*100)+'%"></div></div><div class="muted">'+evening+'회</div></div></div><b style="text-align:right">'+(morning+evening)+'회</b></div>';
+       html+='<div class="gender-person"><div><b>'+esc(m.name)+'</b></div><div class="gender-bars"><div><div class="gender-track"><div class="gender-fill" style="width:'+(morning/max*100)+'%"></div></div><div class="muted">'+morning+'회</div></div><div><div class="gender-track"><div class="gender-fill evening" style="width:'+(evening/max*100)+'%"></div></div><div class="muted">'+evening+'회</div></div></div><b style="text-align:right">'+(morning+evening)+'회</b></div>';
     });
-    html+='</section>';
+    html+='</details>';
     return html;
   };
   google.script.run
     .withSuccessHandler(rows=>{
       const container=document.getElementById('memberStats');
       container.innerHTML=renderGroup('남청년',maleNames,rows,'male')+renderGroup('여청년',femaleNames,rows,'female');
+      [...new Set(rows.map(m=>m.group||'미분류'))].filter(group=>!['남청년','여청년'].includes(group)).forEach(group=>{container.innerHTML+=renderGroup(group,[],rows,'other');});
       const registered=new Set(rows.map(m=>m.name));
       const missing=[...maleNames,...femaleNames].filter(n=>!registered.has(n));
       if(missing.length) container.innerHTML+='<p class="muted">회원명단에 아직 등록되지 않은 이름: '+missing.map(esc).join(', ')+'</p>';
