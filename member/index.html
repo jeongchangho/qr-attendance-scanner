@@ -46,6 +46,19 @@ button{font:inherit;border:0;border-radius:9px;padding:10px 12px;background:#176
 main{padding-bottom:calc(88px + env(safe-area-inset-bottom))}
 @media(max-width:520px){main{padding:10px 10px calc(88px + env(safe-area-inset-bottom))}.calendar-search{grid-template-columns:minmax(0,1fr) minmax(82px,32%) auto}.calendar-search h3{font-size:12.5px}}
 
+
+/* 달력 제목 크기 보정 */
+.calendar-search h3 {
+  font-size: 22px !important;
+  line-height: 1.4 !important;
+  font-weight: 750 !important;
+}
+@media (max-width: 480px) {
+  .calendar-search h3 {
+    font-size: 21px !important;
+  }
+}
+
 </style></head><body>
 <section id="splashScreen" aria-label="순천지역WM 시작 화면"><div class="splash-title">순천지역WM</div><div class="splash-subtitle">하나님과 동행하는 순천지역WM</div></section>
 <header>순천지역WM<small>하나님과 동행하는 순천지역WM</small></header>
@@ -94,15 +107,10 @@ function renderScheduleCalendar(){const first=new Date(sy,sm-1,1).getDay(),last=
 function selectScheduleDate(ds){scheduleSelected=ds;renderScheduleCalendar();renderSelectedSchedule(ds)}
 function renderSelectedSchedule(ds){const rows=(window.scheduleRows||[]).filter(x=>x.date===ds);$('selectedSchedule').innerHTML='<b>'+esc(ds)+'</b>'+(rows.length?rows.map(x=>`<div class="schedule-item"><b>${esc(x.title)}</b><div>시간: ${esc(x.time||'-')}</div><div>장소: ${esc(x.place||'-')}</div><div>상세 내용: ${esc(x.detail||'-')}</div></div>`).join(''):'<p class="muted">이 날짜에는 등록된 일정이 없습니다.</p>')}
 let allowAppExit=false;function confirmAppExit(){
-  const dialog=$('exitDialog'),question=$('exitQuestion'),actions=dialog.querySelector('.exit-dialog-actions');
-  try{window.close()}catch(e){}
-  window.setTimeout(()=>{
-    if(document.visibilityState==='visible'){
-      question.textContent='이 앱은 여기서 강제로 종료할 수 없습니다. 홈 화면으로 이동한 뒤 최근 앱 화면에서 순천지역WM을 위로 밀어 종료해 주세요.';
-      actions.innerHTML='<button type="button" onclick="$(\'exitDialog\').classList.remove(\'show\')">확인</button>';
-      dialog.classList.add('show');
-    }
-  },250);
+  allowAppExit=true;
+  const dialog=$('exitDialog');
+  if(dialog) dialog.classList.remove('show');
+  history.back();
 }function cancelAppExit(){$('exitDialog').classList.remove('show');history.pushState({stay:true},'','#app')}window.addEventListener('beforeunload',e=>{if(!allowAppExit){e.preventDefault();e.returnValue='종료하시겠습니까?';return e.returnValue;}});window.addEventListener('popstate',()=>{if(!allowAppExit){$('exitDialog').classList.add('show');history.pushState({stay:true},'','#app')}});history.pushState({stay:true},'','#app');
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
 init();
