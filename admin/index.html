@@ -157,6 +157,20 @@ th{color:#667085;background:#f8f9fc}
   color:#263247;
 }
 .drawer button.active{background:#e8edff;color:#315cdb}
+.drawer .nav-item{display:flex;align-items:center;gap:12px;min-height:52px;padding:12px 14px;border-radius:12px;font-size:15px;font-weight:700;background:#f2f4f8;color:#263247;border:1px solid #e7eaf0}
+.drawer .nav-item .nav-icon{width:25px;display:inline-flex;justify-content:center;font-size:20px}
+.drawer .nav-item.active{background:#e8edff;color:#315cdb;border-color:#cbd7ff}
+.gender-section{margin:14px 0 20px;padding:16px;border:1px solid var(--line);border-radius:14px;background:#fff}
+.gender-title{font-size:17px;font-weight:800;margin:0 0 12px}
+.gender-person{display:grid;grid-template-columns:76px minmax(70px,1fr) 52px;gap:9px;align-items:center;margin:10px 0;font-size:13px}
+.gender-bars{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:5px}
+.gender-track{height:10px;background:#edf0f5;border-radius:99px;overflow:hidden}
+.gender-fill{height:100%;border-radius:99px;background:#315cdb}
+.gender-fill.evening{background:#16a078}
+.gender-legend{display:flex;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:12px;margin:8px 0 12px}
+.gender-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;background:#315cdb}
+.gender-dot.evening{background:#16a078}
+
 .calendar-head{
   display:flex;
   justify-content:space-between;
@@ -245,7 +259,7 @@ th{color:#667085;background:#f8f9fc}
 
   <!-- 대시보드 -->
   <section id="dashboardPage" class="page active">
-    <h2>대시보드</h2>
+    <h2>홈</h2>
     <p class="muted" id="adminToday"></p>
 
     <div class="grid">
@@ -299,8 +313,8 @@ th{color:#667085;background:#f8f9fc}
       <p>아침기도모임: 매일 06:00 ~ 09:00</p>
       <p>저녁모임: 수요일 18:00 ~ 22:00</p>
       <p class="muted">
-        월평균 참여율은 이번 달 전체 날짜를 기준으로 계산하며,
-        참석자가 없는 날도 0%로 포함합니다.
+        이번 달 평균 참여율은 월요일부터 금요일까지의 아침기도모임을 기준으로 계산합니다.
+        수요일 저녁모임과 토·일요일은 제외하며, 출석자가 없는 평일도 0%로 포함합니다.
       </p>
     </div>
   </section>
@@ -365,10 +379,8 @@ th{color:#667085;background:#f8f9fc}
 
   <!-- 회원별 통계 -->
   <section id="statsPage" class="page">
-    <h2>회원별 참여 통계</h2>
-    <p class="muted">
-      현재 기록과 과거 보관기록을 합산한 누적 출석 횟수입니다.
-    </p>
+    <h2>남청년 · 여청년 참여 통계</h2>
+    <p class="muted">현재 출석원장과 과거 출석보관 기록을 합산한 누적 출석 횟수입니다. 이름은 가나다순으로 표시합니다.</p>
 
     <div class="card">
       <div id="memberStats">불러오는 중...</div>
@@ -412,16 +424,14 @@ th{color:#667085;background:#f8f9fc}
     <button class="gray" onclick="closeDrawer()">닫기</button>
   </div>
 
-  <button id="navDashboard" class="active"
-    onclick="showPage('dashboardPage')">대시보드</button>
-
-  <button id="navMembers"
-    onclick="showPage('membersPage')">회원 관리</button>
-
-  <button id="navStats"
-    onclick="showPage('statsPage')">회원별 참여 통계</button>
-  <button id="navSchedules"
-    onclick="showPage('schedulesPage')">모임 일정 관리</button>
+  <button id="navDashboard" class="nav-item active"
+    onclick="showPage('dashboardPage')"><span class="nav-icon">⌂</span><span>홈</span></button>
+  <button id="navMembers" class="nav-item"
+    onclick="showPage('membersPage')"><span class="nav-icon">♙</span><span>회원관리</span></button>
+  <button id="navStats" class="nav-item"
+    onclick="showPage('statsPage')"><span class="nav-icon">☷</span><span>통계</span></button>
+  <button id="navSchedules" class="nav-item"
+    onclick="showPage('schedulesPage')"><span class="nav-icon">▦</span><span>일정 관리</span></button>
 </div>
 
 <script>
@@ -971,30 +981,29 @@ function reissueQR(row){
 ===================================== */
 
 function loadStats(){
+  const maleNames=['정창호','국승빈','조병준','서가람','김종원','조준하','이동규','오용환','김백민','최성훈','배효빈'];
+  const femaleNames=['고예빈','배현지','서어진','김민채','이민주','김수민','서한결','최승리','박지예','이하늘','홍세연','최은서','조예림','김국향','조유리','오수현','전유민','윤수빈','전하란'];
+  const sortKo=(a,b)=>a.name.localeCompare(b.name,'ko');
+  const renderGroup=(title,names,rows,kind)=>{
+    const byName=new Map(rows.map(m=>[m.name,m]));
+    const people=names.map(name=>byName.get(name)||{name,status:'미등록',morning:0,evening:0}).sort(sortKo);
+    const max=Math.max(1,...people.flatMap(m=>[Number(m.morning)||0,Number(m.evening)||0]));
+    let html='<section class="gender-section"><h3 class="gender-title">'+title+' ('+people.length+'명)</h3>'+
+      '<div class="gender-legend"><span><i class="gender-dot"></i>아침기도모임</span><span><i class="gender-dot evening"></i>수요일 저녁모임</span></div>';
+    people.forEach(m=>{
+      const morning=Number(m.morning)||0, evening=Number(m.evening)||0;
+      html+='<div class="gender-person"><div><b>'+esc(m.name)+'</b><div class="muted">'+esc(m.status||'')+'</div></div><div class="gender-bars"><div><div class="gender-track"><div class="gender-fill" style="width:'+(morning/max*100)+'%"></div></div><div class="muted">'+morning+'회</div></div><div><div class="gender-track"><div class="gender-fill evening" style="width:'+(evening/max*100)+'%"></div></div><div class="muted">'+evening+'회</div></div></div><b style="text-align:right">'+(morning+evening)+'회</b></div>';
+    });
+    html+='</section>';
+    return html;
+  };
   google.script.run
     .withSuccessHandler(rows=>{
-      let html=
-        '<div class="table-wrap"><table>'+
-        '<tr>'+
-          '<th>회원 이름</th>'+
-          '<th>상태</th>'+
-          '<th>아침기도모임</th>'+
-          '<th>수요일 저녁모임</th>'+
-        '</tr>';
-
-      rows.forEach(m=>{
-        html+=
-          '<tr>'+
-            '<td>'+esc(m.name)+'</td>'+
-            '<td>'+esc(m.status)+'</td>'+
-            '<td>'+m.morning+'회</td>'+
-            '<td>'+m.evening+'회</td>'+
-          '</tr>';
-      });
-
-      html+='</table></div>';
-
-      document.getElementById('memberStats').innerHTML=html;
+      const container=document.getElementById('memberStats');
+      container.innerHTML=renderGroup('남청년',maleNames,rows,'male')+renderGroup('여청년',femaleNames,rows,'female');
+      const registered=new Set(rows.map(m=>m.name));
+      const missing=[...maleNames,...femaleNames].filter(n=>!registered.has(n));
+      if(missing.length) container.innerHTML+='<p class="muted">회원명단에 아직 등록되지 않은 이름: '+missing.map(esc).join(', ')+'</p>';
     })
     .withFailureHandler(err)
     .getMemberStats();
