@@ -1,4 +1,4 @@
-const CACHE_NAME = 'wm-member-splash-v8';
+const CACHE_NAME = 'wm-member-splash-v9';
 const APP_FILES = [
   './',
   './index.html',
@@ -18,7 +18,7 @@ self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys()
       .then(keys => Promise.all(
-        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
+        keys.filter(key => key.startsWith('wm-member-') && key !== CACHE_NAME).map(key => caches.delete(key))
       ))
       .then(() => self.clients.claim())
   );
