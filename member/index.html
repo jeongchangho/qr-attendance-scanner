@@ -14,10 +14,11 @@
 .splash-title{font-size:clamp(30px,6vw,46px);font-weight:800;letter-spacing:.04em}
 .splash-subtitle{margin-top:12px;font-size:14px;color:#527797;letter-spacing:.08em;text-align:center}
 
-*{box-sizing:border-box}body{margin:0;padding-bottom:calc(76px + env(safe-area-inset-bottom));background:#f3f6fb;color:#17243a;font-family:system-ui,sans-serif}
+*{box-sizing:border-box}body{margin:0;background:#f3f6fb;color:#17243a;font-family:system-ui,sans-serif}
 header{background:#1769e0;color:white;padding:16px 18px;font-weight:800;font-size:20px}
 header small{display:block;font-size:12px;font-weight:500;margin-top:4px;opacity:.9}
-main{max-width:1000px;margin:auto;padding:14px}
+main{max-width:1000px;margin:auto;padding:14px 14px 92px}.tabs{display:flex;gap:8px;margin:12px 0}
+.tabs button{flex:1;background:#e4ebf7;color:#24446d}.tabs button.active{background:#1769e0;color:white}
 .page{display:none}.page.active{display:block}.card{background:white;border-radius:14px;padding:15px;margin:12px 0;box-shadow:0 2px 12px #12254a12}
 .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.stat{background:#f7f9fc;border-radius:10px;padding:12px;min-width:0}
 .label{font-size:12px;color:#68778c}.value{font-size:22px;font-weight:800;margin-top:6px;overflow-wrap:anywhere}
@@ -27,21 +28,17 @@ button{font:inherit;border:0;border-radius:9px;padding:10px 12px;background:#176
 .calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.weekday{text-align:center;color:#68778c;font-size:12px;padding:7px 0}
 .day{min-width:0;min-height:56px;border:1px solid #e5eaf1;background:white;color:#17243a;border-radius:9px;padding:5px 2px;display:flex;flex-direction:column;align-items:center;gap:4px}
 .day.has{background:#eaf2ff;border-color:#b7cdf5}.day.selected{outline:2px solid #1769e0}.day .count{font-size:10px;color:#1769e0}
-.bottom-nav{position:fixed;z-index:20;left:0;right:0;bottom:0;display:grid;grid-template-columns:1fr 1fr;padding:7px 10px calc(7px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid #e5eaf1;box-shadow:0 -4px 18px #15244712}
-.bottom-nav button{background:transparent;color:#68778c;border-radius:12px;padding:8px;min-height:52px;font-size:13px}
-.bottom-nav button.active{background:#eaf2ff;color:#1769e0}
-.exit-backdrop{position:fixed;inset:0;z-index:1000;background:#10182899;display:none;align-items:center;justify-content:center;padding:20px}
-.exit-dialog{background:#fff;border-radius:18px;padding:22px;width:min(340px,100%);box-shadow:0 15px 40px #0003}
-.exit-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}
-.exit-actions .secondary{background:#e4ebf7;color:#24446d}
 .bar-row{display:grid;grid-template-columns:42px minmax(60px,1fr) 44px;gap:8px;align-items:center;margin:12px 0;font-size:13px}
 .track{height:13px;background:#edf0f5;border-radius:99px;overflow:hidden}.bar{height:100%;border-radius:99px}
+.exit-dialog{position:fixed;inset:0;background:#0007;z-index:10000;display:none;align-items:center;justify-content:center;padding:20px}.exit-dialog.show{display:flex}.exit-dialog-card{width:min(340px,100%);background:#fff;border-radius:16px;padding:22px;text-align:center;box-shadow:0 12px 40px #0003}.exit-dialog-card p{font-weight:800;font-size:18px;margin:4px 0 20px}.exit-dialog-actions{display:flex;gap:10px}.exit-dialog-actions button{flex:1}
+.bottom-nav{position:fixed;left:0;right:0;bottom:0;display:grid;grid-template-columns:1fr 1fr;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:white;border-top:1px solid #e5eaf1;z-index:20;box-shadow:0 -4px 18px #15294a12}.bottom-nav button{background:transparent;color:#68778c;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px}.bottom-nav button.active{background:#e8f0ff;color:#1769e0}.bottom-nav .nav-icon{font-size:20px;line-height:1.1}.calendar-search{display:flex;align-items:center;justify-content:space-between;gap:8px}.calendar-search h3{margin:0;flex:1}.calendar-search input{width:min(210px,56%);min-width:0;padding:8px;border:1px solid #dce3ee;border-radius:9px}.search-result{font-weight:700;margin:9px 0;color:#24446d}.day.personal-has{background:#fff;border-color:#dce5f4}.personal-dot{width:6px;height:6px;border-radius:50%;background:#1769e0;display:block;margin-top:3px}
 .schedule-item{padding:12px;background:#f7f9fc;border-radius:10px;margin:8px 0}.muted{color:#68778c;font-size:12px}
 @media(max-width:520px){main{padding:10px}.grid{gap:5px}.stat{padding:9px}.label{font-size:11px}.value{font-size:19px}.bar-row{grid-template-columns:38px minmax(50px,1fr) 38px;gap:6px}}
 </style></head><body>
 <section id="splashScreen" aria-label="순천지역WM 시작 화면"><div class="splash-title">순천지역WM</div><div class="splash-subtitle">하나님과 동행하는 순천지역WM</div></section>
 <header>순천지역WM<small>하나님과 동행하는 순천지역WM</small></header>
 <main>
+
 <section id="attendancePage" class="page active">
 <div class="grid">
 <div class="stat"><div class="label">전체 회원</div><div id="total" class="value">-</div></div>
@@ -49,7 +46,7 @@ button{font:inherit;border:0;border-radius:9px;padding:10px 12px;background:#176
 <div class="stat"><div class="label">이번 달 아침기도모임 최다 참여자</div><div id="top" class="value">-</div></div>
 </div>
 <div class="card"><h3>이번 달 아침기도모임 참여 TOP 5</h3><div id="ranking"><span class="muted">불러오는 중...</span></div></div>
-<div class="card"><h3>아침기도모임 출석 달력</h3><div class="row calendar-nav"><button onclick="shiftAttendance(-1)">이전 달</button><strong id="month"></strong><button onclick="shiftAttendance(1)">다음 달</button></div><div id="calendar" class="calendar"></div></div>
+<div class="card"><div class="calendar-search"><h3>아침기도모임 출석 달력</h3><input id="personalSearch" placeholder="이름 검색" onkeydown="if(event.key==='Enter')searchPersonal()"><button id="personalSearchBtn" onclick="searchPersonal()">검색</button></div><div id="personalSearchResult" class="search-result"></div><div class="row calendar-nav"><button onclick="shiftAttendance(-1)">이전 달</button><strong id="month"></strong><button onclick="shiftAttendance(1)">다음 달</button></div><div id="calendar" class="calendar"></div></div>
 <div class="card"><h3 id="attendeeTitle">선택한 날짜 출석자</h3><div id="attendees" class="muted">날짜를 선택하세요.</div></div>
 </section>
 <section id="schedulePage" class="page">
@@ -57,8 +54,8 @@ button{font:inherit;border:0;border-radius:9px;padding:10px 12px;background:#176
 <div class="card"><h3>월별 일정 달력</h3><div class="row calendar-nav"><button onclick="shiftSchedule(-1)">이전 달</button><strong id="scheduleMonth"></strong><button onclick="shiftSchedule(1)">다음 달</button></div><div id="scheduleCalendar" class="calendar"></div><div class="schedule-item" id="selectedSchedule"><span class="muted">달력에서 날짜를 선택하면 시간과 상세 내용이 표시됩니다.</span></div></div>
 </section>
 </main>
-<nav class="bottom-nav" aria-label="회원 메뉴"><button id="tabAttendance" class="active" onclick="showTab('attendance')">활동</button><button id="tabSchedule" onclick="showTab('schedule')">일정</button></nav>
-<div id="exitBackdrop" class="exit-backdrop" role="dialog" aria-modal="true" aria-labelledby="exitTitle"><div class="exit-dialog"><h3 id="exitTitle">앱을 종료할까요?</h3><p class="muted">화면을 나가시겠습니까?</p><div class="exit-actions"><button class="secondary" onclick="cancelExit()">아니오</button><button onclick="confirmExit()">예</button></div></div></div>
+<nav class="bottom-nav"><button id="tabAttendance" class="active" onclick="showTab('attendance')"><span class="nav-icon">♙</span>활동</button><button id="tabSchedule" onclick="showTab('schedule')"><span class="nav-icon">▦</span>일정</button></nav>
+<div id="exitDialog" class="exit-dialog" role="dialog" aria-modal="true" aria-labelledby="exitQuestion"><div class="exit-dialog-card"><p id="exitQuestion">종료하시겠습니까?</p><div class="exit-dialog-actions"><button onclick="confirmAppExit()">예</button><button onclick="cancelAppExit()" style="background:#e4ebf7;color:#24446d">아니오</button></div></div></div>
 <script>
 const API="https://script.google.com/macros/s/AKfycbx6HK7qLTZGvJVyguvH0qgsaJXEJhHFhX-axeo7ZJqdf9lztk8tl4xMm1YP1b2qGb7A/exec";
 function call(method,params={}){return new Promise((resolve,reject)=>{const cb="wmcb"+Date.now()+Math.floor(Math.random()*9999),s=document.createElement("script");let timer=setTimeout(()=>{clean();reject(Error("서버 응답 시간 초과"))},20000);function clean(){clearTimeout(timer);delete window[cb];s.remove()}window[cb]=r=>{clean();if(r&&r.ok)resolve(r.data);else reject(Error(r&&r.message||"요청 실패"))};s.onerror=()=>{clean();reject(Error("서버 연결 실패"))};s.src=API+"?action=api&method="+encodeURIComponent(method)+"&callback="+cb+"&"+new URLSearchParams(params);document.body.appendChild(s)})}
@@ -72,7 +69,11 @@ const colors={1:'#e53935',2:'#fb8c00',3:'#fdd835'};const max=Math.max(1,...rows.
 $('ranking').innerHTML=rows.map(x=>{const color=colors[x.rank]||'#9e9e9e';return `<div class="bar-row"><b>${x.rank}위</b><div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>${esc(x.name)}</span></div><div class="track"><div class="bar" style="width:${x.count/max*100}%;background:${color}"></div></div></div><b>${x.count}회</b></div>`}).join('')}
 async function drawAttendance(){const d=await call('calendar',{year:yy,month:mm});$('month').textContent=yy+'년 '+mm+'월';renderCalendar($('calendar'),d,selectedDate,'selectAttendance')}
 function renderCalendar(el,d,selected,handler){const first=new Date(d.year,d.month-1,1).getDay(),last=new Date(d.year,d.month,0).getDate();let h=['일','월','화','수','목','금','토'].map(x=>`<div class="weekday">${x}</div>`).join('');for(let i=0;i<first;i++)h+='<div></div>';for(let day=1;day<=last;day++){const ds=d.year+'-'+String(d.month).padStart(2,'0')+'-'+String(day).padStart(2,'0');const a=d.attendance&&d.attendance[ds];h+=`<button class="day ${a?'has':''} ${selected===ds?'selected':''}" onclick="${handler}('${ds}')"><span>${day}</span>${a?`<span class="count">${a.count}명</span>`:''}</button>`}el.innerHTML=h}
-function shiftAttendance(n){mm+=n;if(mm<1){mm=12;yy--}if(mm>12){mm=1;yy++}drawAttendance()}
+let personalSearchActive=false;
+async function searchPersonal(){const input=$('personalSearch'),btn=$('personalSearchBtn');if(btn.dataset.clear==='1'){personalSearchActive=false;input.value='';btn.textContent='검색';btn.dataset.clear='0';$('personalSearchResult').textContent='';await drawAttendance();return;}const name=input.value.trim();if(!name){alert('이름을 입력하세요.');return;}try{const d=await call('personalCalendar',{name,year:yy,month:mm});personalSearchActive=true;btn.textContent='×';btn.dataset.clear='1';$('personalSearchResult').textContent=d.name+' · 이번 달 '+d.count+'회 출석';$('month').textContent=d.year+'년 '+d.month+'월';renderPersonalCalendar(d);}catch(e){alert(e.message)}}
+async function refreshPersonalSearch(){try{const d=await call('personalCalendar',{name:$('personalSearch').value.trim(),year:yy,month:mm});$('personalSearchResult').textContent=d.name+' · 이번 달 '+d.count+'회 출석';$('month').textContent=d.year+'년 '+d.month+'월';renderPersonalCalendar(d)}catch(e){alert(e.message)}}
+function renderPersonalCalendar(d){const first=new Date(d.year,d.month-1,1).getDay(),last=new Date(d.year,d.month,0).getDate();let h=['일','월','화','수','목','금','토'].map(x=>`<div class="weekday">${x}</div>`).join('');for(let i=0;i<first;i++)h+='<div></div>';for(let day=1;day<=last;day++){const ds=d.year+'-'+String(d.month).padStart(2,'0')+'-'+String(day).padStart(2,'0'),yes=d.dates.includes(ds);h+=`<div class="day ${yes?'personal-has':''}"><span>${day}</span>${yes?'<i class="personal-dot"></i>':''}</div>`}$('calendar').innerHTML=h}
+function shiftAttendance(n){mm+=n;if(mm<1){mm=12;yy--}if(mm>12){mm=1;yy++}if(personalSearchActive)refreshPersonalSearch();else drawAttendance()}
 async function selectAttendance(ds){selectedDate=ds;await drawAttendance();$('attendeeTitle').textContent=ds+' 아침기도모임 출석자';try{const a=await call('attendees',{date:ds});$('attendees').textContent=a.length?a.join(', '):'출석자가 없습니다.'}catch(e){$('attendees').textContent=e.message}}
 function shiftSchedule(n){sm+=n;if(sm<1){sm=12;sy--}if(sm>12){sm=1;sy++}scheduleSelected='';loadSchedules()}
 async function loadSchedules(){try{const rows=await call('schedules',{year:sy,month:sm});$('scheduleMonthHeading').textContent=sy+'년 '+sm+'월 일정';$('scheduleMonth').textContent=sy+'년 '+sm+'월';$('monthScheduleList').innerHTML=rows.length?rows.map(x=>`<div class="schedule-item"><b>${esc(x.date)} · ${esc(x.title)}</b></div>`).join(''):'<p class="muted">이번 달 등록된 일정이 없습니다.</p>';const byDate={};rows.forEach(x=>(byDate[x.date]||(byDate[x.date]=[])).push(x));const days={};Object.keys(byDate).forEach(k=>days[k]={count:byDate[k].length});window.scheduleRows=rows;renderScheduleCalendar();if(scheduleSelected)renderSelectedSchedule(scheduleSelected);else $('selectedSchedule').innerHTML='<span class="muted">달력에서 날짜를 선택하면 시간과 상세 내용이 표시됩니다.</span>'}catch(e){$('monthScheduleList').textContent=e.message}}
@@ -80,12 +81,8 @@ function scheduleDays(){const o={};(window.scheduleRows||[]).forEach(x=>(o[x.dat
 function renderScheduleCalendar(){const first=new Date(sy,sm-1,1).getDay(),last=new Date(sy,sm,0).getDate();let h=['일','월','화','수','목','금','토'].map(x=>`<div class="weekday">${x}</div>`).join('');for(let i=0;i<first;i++)h+='<div></div>';const days=scheduleDays();for(let day=1;day<=last;day++){const ds=sy+'-'+String(sm).padStart(2,'0')+'-'+String(day).padStart(2,'0'),n=days[ds]?.count||0;h+=`<button class="day ${n?'has':''} ${scheduleSelected===ds?'selected':''}" onclick="selectScheduleDate('${ds}')"><span>${day}</span>${n?`<span class="count">일정 ${n}개</span>`:''}</button>`}$('scheduleCalendar').innerHTML=h}
 function selectScheduleDate(ds){scheduleSelected=ds;renderScheduleCalendar();renderSelectedSchedule(ds)}
 function renderSelectedSchedule(ds){const rows=(window.scheduleRows||[]).filter(x=>x.date===ds);$('selectedSchedule').innerHTML='<b>'+esc(ds)+'</b>'+(rows.length?rows.map(x=>`<div class="schedule-item"><b>${esc(x.title)}</b><div>시간: ${esc(x.time||'-')}</div><div>장소: ${esc(x.place||'-')}</div><div>상세 내용: ${esc(x.detail||'-')}</div></div>`).join(''):'<p class="muted">이 날짜에는 등록된 일정이 없습니다.</p>')}
+let allowAppExit=false;function confirmAppExit(){allowAppExit=true;$('exitDialog').classList.remove('show');history.back()}function cancelAppExit(){$('exitDialog').classList.remove('show');history.pushState({stay:true},'','#app')}window.addEventListener('beforeunload',e=>{if(!allowAppExit){e.preventDefault();e.returnValue='종료하시겠습니까?';return e.returnValue;}});window.addEventListener('popstate',()=>{if(!allowAppExit){$('exitDialog').classList.add('show');history.pushState({stay:true},'','#app')}});history.pushState({stay:true},'','#app');
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
-history.pushState({wmExitGuard:true},'',location.href);
-window.addEventListener('popstate',()=>{$('exitBackdrop').style.display='flex';history.pushState({wmExitGuard:true},'',location.href)});
-function cancelExit(){$('exitBackdrop').style.display='none'}
-function confirmExit(){$('exitBackdrop').style.display='none';history.go(-2);setTimeout(()=>window.close(),100)}
-window.setInterval(()=>{if($('attendancePage').classList.contains('active')){init()}else if($('schedulePage').classList.contains('active'))loadSchedules()},60000);
 init();
 // 시작 화면: 이 스크립트는 body 맨 아래에서 실행되므로
 // DOMContentLoaded 이벤트를 기다리지 않고 바로 타이머를 시작합니다.
