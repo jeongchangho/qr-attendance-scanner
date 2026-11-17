@@ -1085,7 +1085,7 @@ stop.onclick = stopCamera;
 if ('serviceWorker' in navigator) {
 
   navigator.serviceWorker
-    .register('./sw.js')
+    .register('./sw.js', { scope: './index.html' })
     .catch(() => {});
 
 }

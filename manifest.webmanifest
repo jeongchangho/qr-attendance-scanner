@@ -1,10 +1,10 @@
 {
-  "id": "./index.html",
+  "id": "/qr-attendance-scanner/index.html",
   "name": "QR스캐너",
   "short_name": "QR스캐너",
   "description": "순천지역WM QR 출석 체크",
-  "start_url": "./index.html",
-  "scope": "./index.html",
+  "start_url": "/qr-attendance-scanner/index.html",
+  "scope": "/qr-attendance-scanner/index.html",
   "display": "standalone",
   "display_override": [
     "standalone"
