@@ -269,6 +269,19 @@ body{padding-bottom:90px}
 body{padding-bottom:calc(78px + env(safe-area-inset-bottom))}
 @media(max-width:650px){body{padding:0 11px calc(78px + env(safe-area-inset-bottom))}.top{margin:0 -11px 16px;padding:18px 20px;min-height:76px}.calendar-search{grid-template-columns:minmax(0,1fr) minmax(82px,32%) auto}.calendar-search h3{font-size:12.5px}}
 
+
+/* 달력 제목 크기 보정 */
+.calendar-search h3 {
+  font-size: 22px !important;
+  line-height: 1.4 !important;
+  font-weight: 750 !important;
+}
+@media (max-width: 480px) {
+  .calendar-search h3 {
+    font-size: 21px !important;
+  }
+}
+
 </style>
 </head>
 
@@ -283,7 +296,8 @@ body{padding-bottom:calc(78px + env(safe-area-inset-bottom))}
 <div id="adminPage">
 
   <header class="top">
-    <div><h1>순천지역WM</h1></div>
+    <div><h1>순천지역WM</h1>
+      <div class="subtitle">순천지역WM 관리자</div></div>
   </header>
 
   <!-- 대시보드 -->
@@ -1279,19 +1293,10 @@ window.addEventListener('DOMContentLoaded',()=>{
 // 앱 종료 확인: 브라우저/OS가 제공하는 종료 확인창을 사용합니다.
 let allowAppExit=false;
 function confirmAppExit(){
+  allowAppExit=true;
   const dialog=document.getElementById('exitDialog');
-  const question=document.getElementById('exitQuestion');
-  const actions=dialog.querySelector('.exit-dialog-actions');
-  try{window.close();}catch(e){}
-  // 설치형 웹앱은 Android 정책상 페이지 스크립트만으로 앱 프로세스를 강제 종료할 수 없습니다.
-  // 종료가 차단되면 사용자가 최근 앱 화면에서 닫을 수 있도록 안내합니다.
-  window.setTimeout(()=>{
-    if(document.visibilityState==='visible'){
-      question.textContent='이 앱은 여기서 강제로 종료할 수 없습니다. 홈 화면으로 이동한 뒤 최근 앱 화면에서 순천지역WM을 위로 밀어 종료해 주세요.';
-      actions.innerHTML='<button type="button" onclick="document.getElementById(\'exitDialog\').classList.remove(\'show\')">확인</button>';
-      dialog.classList.add('show');
-    }
-  },250);
+  if(dialog) dialog.classList.remove('show');
+  history.back();
 }
 function cancelAppExit(){document.getElementById('exitDialog').classList.remove('show');history.pushState({stay:true},'','#app');}
 window.addEventListener('beforeunload',e=>{if(!allowAppExit){e.preventDefault();e.returnValue='종료하시겠습니까?';return e.returnValue;}});
