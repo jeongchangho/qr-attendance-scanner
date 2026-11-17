@@ -34,6 +34,18 @@ button{font:inherit;border:0;border-radius:9px;padding:10px 12px;background:#176
 .bottom-nav{position:fixed;left:0;right:0;bottom:0;display:grid;grid-template-columns:1fr 1fr;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:white;border-top:1px solid #e5eaf1;z-index:20;box-shadow:0 -4px 18px #15294a12}.bottom-nav button{background:transparent;color:#68778c;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px}.bottom-nav button.active{background:#e8f0ff;color:#1769e0}.bottom-nav .nav-icon{font-size:20px;line-height:1.1}.calendar-search{display:flex;align-items:center;justify-content:space-between;gap:8px}.calendar-search h3{margin:0;flex:1}.calendar-search input{width:min(210px,56%);min-width:0;padding:8px;border:1px solid #dce3ee;border-radius:9px}.search-result{font-weight:700;margin:9px 0;color:#24446d}.day.personal-has{background:#fff;border-color:#dce5f4}.personal-dot{width:6px;height:6px;border-radius:50%;background:#1769e0;display:block;margin-top:3px}
 .schedule-item{padding:12px;background:#f7f9fc;border-radius:10px;margin:8px 0}.muted{color:#68778c;font-size:12px}
 @media(max-width:520px){main{padding:10px}.grid{gap:5px}.stat{padding:9px}.label{font-size:11px}.value{font-size:19px}.bar-row{grid-template-columns:38px minmax(50px,1fr) 38px;gap:6px}}
+
+/* 화면 개선: 검색 제목 한 줄 유지, 하단 메뉴 축소 및 콘텐츠 여백 */
+.calendar-search{display:grid;grid-template-columns:minmax(0,1fr) minmax(76px,29%) auto;align-items:center;gap:6px}
+.calendar-search h3{font-size:clamp(14px,3.7vw,17px);line-height:1.25;min-width:0;white-space:nowrap;letter-spacing:-.04em}
+.calendar-search input{width:100%;min-width:0;padding:8px 9px;font-size:14px}
+.calendar-search button{padding:9px 10px;white-space:nowrap;font-size:13px}
+.bottom-nav{padding:4px 8px calc(4px + env(safe-area-inset-bottom))}
+.bottom-nav button{padding:5px 2px;min-height:48px;gap:2px;font-size:10px}
+.bottom-nav .nav-icon{font-size:18px;line-height:1}
+main{padding-bottom:calc(88px + env(safe-area-inset-bottom))}
+@media(max-width:520px){main{padding:10px 10px calc(88px + env(safe-area-inset-bottom))}.calendar-search{grid-template-columns:minmax(0,1fr) minmax(82px,32%) auto}.calendar-search h3{font-size:12.5px}}
+
 </style></head><body>
 <section id="splashScreen" aria-label="순천지역WM 시작 화면"><div class="splash-title">순천지역WM</div><div class="splash-subtitle">하나님과 동행하는 순천지역WM</div></section>
 <header>순천지역WM<small>하나님과 동행하는 순천지역WM</small></header>
@@ -54,7 +66,7 @@ button{font:inherit;border:0;border-radius:9px;padding:10px 12px;background:#176
 <div class="card"><h3>월별 일정 달력</h3><div class="row calendar-nav"><button onclick="shiftSchedule(-1)">이전 달</button><strong id="scheduleMonth"></strong><button onclick="shiftSchedule(1)">다음 달</button></div><div id="scheduleCalendar" class="calendar"></div><div class="schedule-item" id="selectedSchedule"><span class="muted">달력에서 날짜를 선택하면 시간과 상세 내용이 표시됩니다.</span></div></div>
 </section>
 </main>
-<nav class="bottom-nav"><button id="tabAttendance" class="active" onclick="showTab('attendance')"><span class="nav-icon">♙</span>활동</button><button id="tabSchedule" onclick="showTab('schedule')"><span class="nav-icon">▦</span>일정</button></nav>
+<nav class="bottom-nav"><button id="tabAttendance" class="active" onclick="showTab('attendance')"><span class="nav-icon"><svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true"><circle cx="12" cy="7.5" r="4" fill="currentColor"/><path d="M4.5 21c.3-4.3 3.2-6.8 7.5-6.8s7.2 2.5 7.5 6.8" fill="currentColor"/></svg></span>활동</button><button id="tabSchedule" onclick="showTab('schedule')"><span class="nav-icon">▦</span>일정</button></nav>
 <div id="exitDialog" class="exit-dialog" role="dialog" aria-modal="true" aria-labelledby="exitQuestion"><div class="exit-dialog-card"><p id="exitQuestion">종료하시겠습니까?</p><div class="exit-dialog-actions"><button onclick="confirmAppExit()">예</button><button onclick="cancelAppExit()" style="background:#e4ebf7;color:#24446d">아니오</button></div></div></div>
 <script>
 const API="https://script.google.com/macros/s/AKfycbx6HK7qLTZGvJVyguvH0qgsaJXEJhHFhX-axeo7ZJqdf9lztk8tl4xMm1YP1b2qGb7A/exec";
@@ -81,7 +93,7 @@ function scheduleDays(){const o={};(window.scheduleRows||[]).forEach(x=>(o[x.dat
 function renderScheduleCalendar(){const first=new Date(sy,sm-1,1).getDay(),last=new Date(sy,sm,0).getDate();let h=['일','월','화','수','목','금','토'].map(x=>`<div class="weekday">${x}</div>`).join('');for(let i=0;i<first;i++)h+='<div></div>';const days=scheduleDays();for(let day=1;day<=last;day++){const ds=sy+'-'+String(sm).padStart(2,'0')+'-'+String(day).padStart(2,'0'),n=days[ds]?.count||0;h+=`<button class="day ${n?'has':''} ${scheduleSelected===ds?'selected':''}" onclick="selectScheduleDate('${ds}')"><span>${day}</span>${n?`<span class="count">일정 ${n}개</span>`:''}</button>`}$('scheduleCalendar').innerHTML=h}
 function selectScheduleDate(ds){scheduleSelected=ds;renderScheduleCalendar();renderSelectedSchedule(ds)}
 function renderSelectedSchedule(ds){const rows=(window.scheduleRows||[]).filter(x=>x.date===ds);$('selectedSchedule').innerHTML='<b>'+esc(ds)+'</b>'+(rows.length?rows.map(x=>`<div class="schedule-item"><b>${esc(x.title)}</b><div>시간: ${esc(x.time||'-')}</div><div>장소: ${esc(x.place||'-')}</div><div>상세 내용: ${esc(x.detail||'-')}</div></div>`).join(''):'<p class="muted">이 날짜에는 등록된 일정이 없습니다.</p>')}
-let allowAppExit=false;function confirmAppExit(){allowAppExit=true;$('exitDialog').classList.remove('show');history.back()}function cancelAppExit(){$('exitDialog').classList.remove('show');history.pushState({stay:true},'','#app')}window.addEventListener('beforeunload',e=>{if(!allowAppExit){e.preventDefault();e.returnValue='종료하시겠습니까?';return e.returnValue;}});window.addEventListener('popstate',()=>{if(!allowAppExit){$('exitDialog').classList.add('show');history.pushState({stay:true},'','#app')}});history.pushState({stay:true},'','#app');
+let allowAppExit=false;function confirmAppExit(){allowAppExit=true;$('exitDialog').classList.remove('show');try{window.close()}catch(e){}history.back();setTimeout(()=>{if(history.length>1)history.back()},120)}function cancelAppExit(){$('exitDialog').classList.remove('show');history.pushState({stay:true},'','#app')}window.addEventListener('beforeunload',e=>{if(!allowAppExit){e.preventDefault();e.returnValue='종료하시겠습니까?';return e.returnValue;}});window.addEventListener('popstate',()=>{if(!allowAppExit){$('exitDialog').classList.add('show');history.pushState({stay:true},'','#app')}});history.pushState({stay:true},'','#app');
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
 init();
 // 시작 화면: 이 스크립트는 body 맨 아래에서 실행되므로
